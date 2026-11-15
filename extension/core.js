@@ -3,9 +3,9 @@
 const TYPES=['ball','player','single_player','live_dead','lineup','reid','away','home','refs'];
 const fresh=()=>({schema:1,tasks:[],active:null,shifts:[],shift:null,clock:null,prompts:[],audit:[],lang:'bg',health:{}});
 const uuid=()=>globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2)+Date.now();
-const LEAGUES=['dsl','efl','football','football-delayed','ligue1','ligue2','lkl'];
+const LEAGUES=['dsl','efl','football','football-delayed','ligue1','ligue2','lkl','uefa'];
 const ID=/^[a-zA-Z0-9_-]{1,100}$/;
-function taskFromURL(url){try{const u=new URL(url);if(u.hostname!=='redstone.secondspectrum.com')return null;const seg=u.pathname.split('/').filter(Boolean).map(decodeURIComponent);const li=seg.findIndex(x=>LEAGUES.includes(x.toLowerCase()));if(li<0)return null;const rest=seg.slice(li+1);if(!rest.length||rest.length>2)return null;const id=rest.at(-1);if(!ID.test(id))return null;const raw=rest.length===2?rest[0].toLowerCase():null;const type=raw&&TYPES.includes(raw)?raw:'other';return {league:seg[li].toLowerCase(),type,id}}catch{return null}}
+function taskFromURL(url){try{const u=new URL(url);if(u.hostname!=='redstone.secondspectrum.com')return null;const seg=u.pathname.split('/').filter(Boolean).map(decodeURIComponent);const gi=seg[0]?.toLowerCase()==='global-tasks';const li=gi&&seg.length>=3?1:seg.findIndex(x=>LEAGUES.includes(x.toLowerCase()));if(gi&&!/^[a-z0-9-]{1,40}$/i.test(seg[1]||''))return null;if(li<0)return null;const rest=seg.slice(li+1);if(!rest.length||rest.length>2)return null;const id=rest.at(-1);if(!ID.test(id))return null;const raw=rest.length===2?rest[0].toLowerCase():null;const type=raw&&TYPES.includes(raw)?raw:'other';return {league:seg[li].toLowerCase(),type,id}}catch{return null}}
 function prompt(s,kind,data={}){if(!s.prompts.some(p=>p.kind===kind&&p.shift===data.shift))s.prompts.push({id:uuid(),kind,...data})}
 function currentShift(s){return s.shifts.find(x=>x.id===s.shift)}
 function taskNow(s){return s.tasks.find(x=>x.key===s.active)}
