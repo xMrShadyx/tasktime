@@ -3,7 +3,9 @@
 const TYPES=['ball','player','single_player','live_dead','lineup','reid','away','home','refs'];
 const fresh=()=>({schema:1,tasks:[],active:null,shifts:[],shift:null,clock:null,prompts:[],audit:[],lang:'bg',health:{}});
 const uuid=()=>globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2)+Date.now();
-function taskFromURL(url){try{const u=new URL(url);if(u.hostname!=='redstone.secondspectrum.com')return null;const m=u.pathname.match(/^\/global-tasks\/football\/([^/]+)\/([a-zA-Z0-9-]{1,100})\/?$/);return m&&TYPES.includes(m[1])?{type:m[1],id:m[2]}:null}catch{return null}}
+const LEAGUES=['dsl','efl','football','football-delayed','ligue1','ligue2','lkl'];
+const ID=/^[a-zA-Z0-9_-]{1,100}$/;
+function taskFromURL(url){try{const u=new URL(url);if(u.hostname!=='redstone.secondspectrum.com')return null;const seg=u.pathname.split('/').filter(Boolean).map(decodeURIComponent);const li=seg.findIndex(x=>LEAGUES.includes(x.toLowerCase()));if(li<0)return null;const rest=seg.slice(li+1);if(!rest.length||rest.length>2)return null;const id=rest.at(-1);if(!ID.test(id))return null;const raw=rest.length===2?rest[0].toLowerCase():null;const type=raw&&TYPES.includes(raw)?raw:'other';return {league:seg[li].toLowerCase(),type,id}}catch{return null}}
 function prompt(s,kind,data={}){if(!s.prompts.some(p=>p.kind===kind&&p.shift===data.shift))s.prompts.push({id:uuid(),kind,...data})}
 function currentShift(s){return s.shifts.find(x=>x.id===s.shift)}
 function taskNow(s){return s.tasks.find(x=>x.key===s.active)}
@@ -38,7 +40,7 @@ function reduce(s,e){const now=e.at;
  if(e.kind==='task-observe'){
   const info=taskFromURL(e.url);s.health.taskSeen=now;let t=taskNow(s);
   if(t&&t.owner!==e.tab){if(!e.visible)return s;endTask(s,now,'tab-conflict');t=null;}
-  if(t&&(t.id!==info?.id||t.type!==info?.type)){endTask(s,now,info?'next-task':'left-task');t=null;}
+  if(t&&(t.id!==info?.id||t.type!==info?.type||(t.league||'football')!==info?.league)){endTask(s,now,info?'next-task':'left-task');t=null;}
   if(info&&!t){t={key:uuid(),...info,owner:e.tab,start:now,lastSeen:now,observedMs:0,gaps:[],status:'active',shift:s.shift,finishAt:null};s.tasks.push(t);s.active=t.key;}
   else if(t)tickTask(t,now);
  }
@@ -53,6 +55,6 @@ function reduce(s,e){const now=e.at;
  return s;
 }
 function dateKey(ms){const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function stats(s,from,to){return TYPES.map(type=>{const ts=s.tasks.filter(t=>t.type===type&&t.status==='completed'&&t.end&&dateKey(t.end)>=from&&dateKey(t.end)<=to);const values=ts.map(t=>t.observedMs);const total=values.reduce((a,b)=>a+b,0);return {type,count:values.length,total,min:values.length?Math.min(...values):null,max:values.length?Math.max(...values):null,avg:values.length?total/values.length:null}})}
-const api={TYPES,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;
+function stats(s,from,to){return [...TYPES,'other'].map(type=>{const ts=s.tasks.filter(t=>t.type===type&&t.status==='completed'&&t.end&&dateKey(t.end)>=from&&dateKey(t.end)<=to);const values=ts.map(t=>t.observedMs);const total=values.reduce((a,b)=>a+b,0);return {type,count:values.length,total,min:values.length?Math.min(...values):null,max:values.length?Math.max(...values):null,avg:values.length?total/values.length:null}})}
+const api={TYPES,LEAGUES,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;
 })(globalThis);
