@@ -10,7 +10,7 @@ function prompt(s,kind,data={}){if(!s.prompts.some(p=>p.kind===kind&&p.shift===d
 function currentShift(s){return s.shifts.find(x=>x.id===s.shift)}
 function taskNow(s){return s.tasks.find(x=>x.key===s.active)}
 function tickTask(t,now){if(!t)return;const dt=now-t.lastSeen;if(dt<0||dt>45000){if(dt!==0)t.gaps.push({from:t.lastSeen,to:now});}else t.observedMs+=dt;t.lastSeen=now;}
-function endTask(s,now,reason){const t=taskNow(s);if(!t)return;tickTask(t,now);t.end=now;t.reason=reason;t.status=t.finishAt&&now-t.finishAt<=120000&&reason==='next-task'&&!t.blocked?'completed':'review';if(t.status==='completed'){t.observedMs=t.finishObservedMs;t.transitionMs=now-t.finishAt;}if(t.gaps.length||s.tasks.some(x=>x.key!==t.key&&x.id===t.id&&x.type===t.type&&x.status==='completed'))t.status='review';s.active=null;}
+function endTask(s,now,reason){const t=taskNow(s);if(!t)return;tickTask(t,now);t.end=now;t.reason=reason;t.status=t.finishAt&&now-t.finishAt<=120000&&(reason==='next-task'||t.finishKind==='exit'&&['left-task','tab-closed'].includes(reason))&&!t.blocked?'completed':'review';if(t.status==='completed'){t.observedMs=t.finishObservedMs;t.transitionMs=now-t.finishAt;}if(t.gaps.length||s.tasks.some(x=>x.key!==t.key&&x.id===t.id&&x.type===t.type&&x.status==='completed'))t.status='review';s.active=null;}
 function clock(s,value,now){if(!['in','out'].includes(value))return;const prev=s.clock;const sh0=currentShift(s);if(sh0&&s.health.clockSeen&&now-s.health.clockSeen>45000){(sh0.gaps||=[]).push({from:s.health.clockSeen,to:now})}s.clock=value;s.health.clockSeen=now;if(prev===value)return;
  let sh=currentShift(s);
  if(value==='in'){
