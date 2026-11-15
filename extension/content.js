@@ -21,4 +21,5 @@ function observe(){if(stopped)return;if(isTasks){if(location.href!==lastURL){las
 document.addEventListener('click',e=>{const b=e.target.closest?.('button,a,[role="button"],input');if(!b||!isTasks||!e.isTrusted)return;const text=(b.value||b.textContent||'').trim().replace(/\s+/g,' ');if(/^(Finish|Clear\s+Samples)\s*&\s*(Next|Exit)$/i.test(text))send({kind:'finish',finishKind:/Next/i.test(text)?'next':'exit'})},true);
 let debounce;const observer=new MutationObserver(()=>{clearTimeout(debounce);debounce=setTimeout(observe,300)});observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','disabled','style']});
 setInterval(()=>{observe();sync()},15000);setInterval(()=>{if(isTasks)observe();else scanClock()},1000);document.addEventListener('visibilitychange',()=>{observe();sync()});chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes.tasktime)sync()});observe();sync();
+chrome.runtime.onMessage.addListener(m=>{if(m?.kind==='beep-page')tasktimeBeep(m.volume)});
 })();
