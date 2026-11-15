@@ -22,4 +22,23 @@ document.addEventListener('click',e=>{const b=e.target.closest?.('button,a,[role
 let debounce;const observer=new MutationObserver(()=>{clearTimeout(debounce);debounce=setTimeout(observe,300)});observer.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','disabled','style']});
 setInterval(()=>{observe();sync()},15000);setInterval(()=>{if(isTasks)observe();else scanClock()},1000);document.addEventListener('visibilitychange',()=>{observe();sync()});chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes.tasktime)sync()});observe();sync();
 chrome.runtime.onMessage.addListener(m=>{if(m?.kind==='beep-page')tasktimeBeep(m.volume)});
+
+/* Tab alert stages: green = new task while away; orange = "Are you still active?"; red = <=5 s left. */
+if(isTasks){
+ const COLORS={green:'#2fbf4a',orange:'#ff9a1f',red:'#e5262d'};let green=false,stage=null,lastBeep=0,savedTitle=null,savedIcons=null,blink=false;
+ const focused=()=>document.visibilityState==='visible'&&document.hasFocus();
+ function idleModal(){const body=document.body;if(!body||!/still active/i.test(body.textContent||''))return null;const w=document.createTreeWalker(body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(!/are you still active/i.test(n.nodeValue))continue;let el=n.parentElement;if(!el||!visible(el))continue;for(let i=0;i<6&&el.parentElement&&!/seconds?/i.test(el.textContent);i++)el=el.parentElement;const m=(el.textContent||'').match(/in\s+(\d+)\s+seconds?/i);return {sec:m?Number(m[1]):null}}return null}
+ function iconURL(color){const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');g.fillStyle=color;g.beginPath();g.arc(16,16,14,0,Math.PI*2);g.fill();g.lineWidth=3;g.strokeStyle='#fff';g.stroke();return c.toDataURL()}
+ function setLook(color,title){if(savedTitle===null){savedTitle=document.title;savedIcons=[...document.querySelectorAll('link[rel~="icon"]')].map(l=>[l,l.href])}
+  document.querySelectorAll('link[rel~="icon"]').forEach(l=>{if(!l.dataset.tasktime)l.remove()});let l=document.querySelector('link[data-tasktime]');if(!l){l=document.createElement('link');l.rel='icon';l.dataset.tasktime='1';document.head.append(l)}const u=iconURL(color);if(l.href!==u)l.href=u;if(document.title!==title)document.title=title}
+ function restore(){if(savedTitle===null)return;document.querySelector('link[data-tasktime]')?.remove();for(const [l,href] of savedIcons){l.href=href;if(!l.isConnected)document.head.append(l)}document.title=savedTitle;savedTitle=null;savedIcons=null}
+ function step(){if(stopped)return;if(green&&focused()){green=false;send({kind:'alert-clear'})}
+  const modal=idleModal();const next=modal?(modal.sec!=null&&modal.sec<=5?'red':'orange'):green?'green':null;stage=next;blink=!blink;
+  if(!next)return restore();
+  if(next==='green')setLook(COLORS.green,blink?'🟢 New task':(savedTitle??document.title));
+  else{const emoji=next==='red'?'🔴':'🟠';setLook(COLORS[next],`${emoji} Not Active ${modal.sec??''} sec.`.replace('  ',' '))
+   const every=next==='red'?500:1000;if(Date.now()-lastBeep>=every-50){lastBeep=Date.now();send({kind:'alert-beep'})}}}
+ chrome.runtime.onMessage.addListener(m=>{if(m?.kind==='stage-green'&&!focused()){green=true;step()}});
+ setInterval(step,500);window.addEventListener('focus',step);
+}
 })();
