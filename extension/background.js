@@ -1,7 +1,11 @@
 importScripts('core.js');
 let queue=Promise.resolve();
 const read=async()=> (await chrome.storage.local.get('tasktime')).tasktime||TaskTime.fresh();
-async function badge(s){await chrome.action.setBadgeBackgroundColor({color:'#245c4b'});await chrome.action.setBadgeText({text:s.prompts.length?String(s.prompts.length):s.tasks.some(t=>t.status==='review')?'!':''})}
+async function badge(s){
+ const shift=s.shifts.find(x=>x.id===s.shift);
+ const color=s.clock==='in'?'green':s.clock==='out'&&shift&&!shift.end&&shift.breaks.some(b=>!b.end)?'orange':'red';
+ await chrome.action.setIcon({path:{16:'icons/'+color+'16.png',32:'icons/'+color+'32.png'}});
+ await chrome.action.setBadgeBackgroundColor({color:'#245c4b'});await chrome.action.setBadgeText({text:s.prompts.length?String(s.prompts.length):s.tasks.some(t=>t.status==='review')?'!':''})}
 function serialized(fn){const result=queue.then(fn);queue=result.catch(()=>{});return result}
 async function apply(e){const s=await read();TaskTime.reduce(s,e);await chrome.storage.local.set({tasktime:s});await badge(s);return s}
 chrome.runtime.onMessage.addListener((m,sender,reply)=>{
@@ -27,4 +31,4 @@ chrome.action.onClicked.addListener(()=>chrome.tabs.create({url:chrome.runtime.g
 chrome.tabs.onRemoved.addListener(tab=>serialized(()=>apply({kind:'tab-closed',tab,at:Date.now()})).catch(console.error));
 chrome.alarms.onAlarm.addListener(()=>serialized(()=>apply({kind:'tick',at:Date.now()})).catch(console.error));
 async function boot(){if(!await chrome.alarms.get('tasktime-tick'))await chrome.alarms.create('tasktime-tick',{periodInMinutes:1});await badge(await read())}
-chrome.runtime.onInstalled.addListener(boot);chrome.runtime.onStartup.addListener(boot);boot().catch(console.error);
+chrome.runtime.onInstalled.addListener(()=>serialized(boot).catch(console.error));chrome.runtime.onStartup.addListener(()=>serialized(boot).catch(console.error));serialized(boot).catch(console.error);

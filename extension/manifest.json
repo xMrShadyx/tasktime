@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
   "name": "TaskTime — Personal work log (Beta)",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Личен отчет на задачи и смени. Тестова версия / Personal task and shift log. Beta.",
   "permissions": ["storage", "alarms"],
   "background": { "service_worker": "background.js" },
-  "action": { "default_title": "TaskTime — Отчет / Report", "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" } },
+  "action": { "default_title": "TaskTime — Отчет / Report", "default_icon": { "16": "icons/red16.png", "32": "icons/red32.png" } },
   "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
   "content_scripts": [{ "matches": ["https://redstone.secondspectrum.com/*", "https://app.ximble.com/*"], "js": ["content.js"], "run_at": "document_idle" }],
   "options_page": "dashboard.html",
