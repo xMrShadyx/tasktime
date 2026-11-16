@@ -99,7 +99,8 @@ function drawSettings(){const w=W[lang],a=TaskTime.alertSettings(state);for(cons
  $('verTitle').textContent=w.verTitle;$('verNote').textContent=w.verNote(chrome.runtime.getManifest().version);$('verCheck').textContent=w.verCheck;$('alertSound').checked=a.sound;$('alertVolume').value=a.volume;volFill();$('alertVolume').disabled=!a.sound;$('alertNotify').checked=a.notify}
 async function saveAlert(change){try{state.alert=await request({kind:'alert-settings',alert:{...TaskTime.alertSettings(state),...change}});drawSettings();message(W[lang].saved)}catch(e){message(e.message)}}
 
-function drawUpdate(){const w=W[lang],u=state.update;$('update').replaceChildren(...(u?[el('div',{class:'update'},el('b',{textContent:w.upd(u.version)}),el('span',{textContent:w.updHow}),el('a',{href:u.url,target:'_blank',rel:'noopener',textContent:w.updGo+' →'}))]:[]))}
+const isNewer=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<Math.max(x.length,y.length);i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0)}return false};
+function drawUpdate(){const w=W[lang],u=state.update&&isNewer(state.update.version,chrome.runtime.getManifest().version)?state.update:null;$('update').replaceChildren(...(u?[el('div',{class:'update'},el('b',{textContent:w.upd(u.version)}),el('span',{textContent:w.updHow}),el('a',{href:u.url,target:'_blank',rel:'noopener',textContent:w.updGo+' →'}))]:[]))}
 function draw(){drawChrome();drawUpdate();drawQuestions();({today:drawToday,stats:drawStats,shifts:drawShifts,review:drawReview,history:drawHistory,settings:drawSettings})[tab]()}
 async function load(){state=await request({kind:'get'});lang=state.lang||'bg';draw()}
 

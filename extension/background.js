@@ -41,7 +41,9 @@ chrome.alarms.onAlarm.addListener(()=>{serialized(()=>apply({kind:'tick',at:Date
 const SITE='https://xmrshadyx.github.io/tasktime/';
 const newer=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<Math.max(x.length,y.length);i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0)}return false};
 async function reloadIfReplaced(){try{const m=await (await fetch(chrome.runtime.getURL('manifest.json'),{cache:'no-store'})).json();if(m.version&&m.version!==chrome.runtime.getManifest().version)chrome.runtime.reload()}catch{}}
-async function checkUpdate(force){const s=await read();const last=s.health?.updateChecked||0;if(!force&&Date.now()-last<6*3600e3)return s.update||null;
+async function checkUpdate(force){const s=await read();const last=s.health?.updateChecked||0;
+ if(s.update&&!newer(s.update.version,chrome.runtime.getManifest().version)){s.update=null;await chrome.storage.local.set({tasktime:s});await badge(s)}
+if(!force&&Date.now()-last<6*3600e3)return s.update||null;
  let info=null;try{const r=await fetch(SITE+'version.json',{cache:'no-store'});if(r.ok)info=await r.json()}catch{}
  if(!info?.version)return s.update||null;
  s.health={...(s.health||{}),updateChecked:Date.now()};const cur=chrome.runtime.getManifest().version;
