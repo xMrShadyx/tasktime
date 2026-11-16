@@ -1,14 +1,14 @@
 [
   {
     "browser": "Chrome",
-    "file": "tasktime-chrome-0.1.5.zip",
-    "bytes": 34961,
-    "sha256": "61dde7bcca5ab79c6982ca76764d6939edcd87ad3088c53f9100ddcce0295978"
+    "file": "tasktime-chrome-0.1.6.zip",
+    "bytes": 37133,
+    "sha256": "d8033633e15e4738251d06f256ea1bea9d0616dafcf20430eadc5c58b8474e9a"
   },
   {
     "browser": "Opera",
-    "file": "tasktime-opera-0.1.5.zip",
-    "bytes": 34962,
-    "sha256": "665ef1504b4f32437c87a1f575b87dc19974247027f068279e4255f495536d70"
+    "file": "tasktime-opera-0.1.6.zip",
+    "bytes": 37135,
+    "sha256": "7f1aa21bca16c878231bfef766048c616b32bdab6811a85992623c345558094d"
   }
 ]
