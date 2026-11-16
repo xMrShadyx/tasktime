@@ -50,7 +50,7 @@ const shiftOf=s=>s.shifts.find(x=>x.id===s.shift);
 const sumIntervals=(xs,from=0)=>xs.reduce((a,i)=>a+Math.max(0,(i.end||Date.now())-Math.max(i.start,from)),0);
 function clockState(){const sh=shiftOf(state);if(state.clock==='in')return 'in';if(sh&&!sh.end&&sh.breaks.some(b=>!b.end))return 'break';return 'out'}
 
-function drawChrome(){const w=W[lang];document.documentElement.lang=lang;$('lang').value=lang;
+function drawChrome(){const w=W[lang];document.documentElement.lang=lang;document.querySelectorAll('#lang button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.lang===lang)));
  const cs=clockState();$('status').className='status '+cs;$('status').replaceChildren(el('i'),w.status[cs]);
  const nReview=state.tasks.filter(t=>t.status==='review').length;
  $('tabs').replaceChildren(...TABS.map(t=>el('button',{role:'tab',ariaSelected:String(t===tab),onclick:()=>{tab=t;try{localStorage.setItem('tt-tab',t)}catch{}draw()}},w.tabs[t],t==='review'&&nReview?el('span',{class:'count',textContent:nReview}):null)));
@@ -96,7 +96,7 @@ function drawReview(){const w=W[lang];$('reviewNote').textContent=w.reviewNote;c
 function drawHistory(){const w=W[lang];$('search').placeholder=w.search;const q=$('search').value.trim().toLowerCase();const list=state.tasks.slice().reverse().filter(t=>!q||[t.type,t.league,t.id].some(x=>String(x||'').toLowerCase().includes(q))).slice(0,200);$('history').replaceChildren(...(list.length?list.map(t=>taskItem(t)):[empty()]))}
 
 function drawSettings(){const w=W[lang],a=TaskTime.alertSettings(state);for(const id of ['alertTitle','alertNote','dataTitle','dataNote','backup','restore'])$(id).textContent=w[id];$('alertSoundLabel').textContent=w.alertSound;$('alertVolumeLabel').textContent=w.alertVolume;$('alertTest').textContent=w.alertTest;$('alertNotifyLabel').textContent=w.alertNotify;
- $('verTitle').textContent=w.verTitle;$('verNote').textContent=w.verNote(chrome.runtime.getManifest().version);$('verCheck').textContent=w.verCheck;$('alertSound').checked=a.sound;$('alertVolume').value=a.volume;$('alertVolume').disabled=!a.sound;$('alertNotify').checked=a.notify}
+ $('verTitle').textContent=w.verTitle;$('verNote').textContent=w.verNote(chrome.runtime.getManifest().version);$('verCheck').textContent=w.verCheck;$('alertSound').checked=a.sound;$('alertVolume').value=a.volume;volFill();$('alertVolume').disabled=!a.sound;$('alertNotify').checked=a.notify}
 async function saveAlert(change){try{state.alert=await request({kind:'alert-settings',alert:{...TaskTime.alertSettings(state),...change}});drawSettings();message(W[lang].saved)}catch(e){message(e.message)}}
 
 function drawUpdate(){const w=W[lang],u=state.update;$('update').replaceChildren(...(u?[el('div',{class:'update'},el('b',{textContent:w.upd(u.version)}),el('span',{textContent:w.updHow}),el('a',{href:u.url,target:'_blank',rel:'noopener',textContent:w.updGo+' →'}))]:[]))}
@@ -105,7 +105,8 @@ async function load(){state=await request({kind:'get'});lang=state.lang||'bg';dr
 
 try{const t=localStorage.getItem('tt-tab');if(TABS.includes(t))tab=t}catch{}
 $('from').value=$('to').value=today();$('from').onchange=$('to').onchange=()=>{preset='';drawStats()};
-$('lang').onchange=()=>mutate({kind:'language',lang:$('lang').value});
+document.querySelectorAll('#lang button').forEach(b=>b.onclick=()=>{if(b.dataset.lang!==lang)mutate({kind:'language',lang:b.dataset.lang})});
+const volFill=()=>{const v=$('alertVolume');v.style.setProperty('--p',(v.value*100)+'%');$('alertVolumeOut').textContent=Math.round(v.value*100)+'%'};$('alertVolume').addEventListener('input',volFill);
 $('search').oninput=drawHistory;
 $('csv').onclick=()=>{if(!validRange())return message(W[lang].invalid);const rows=[['type','count','fastest_seconds','slowest_seconds','average_seconds','total_seconds','from','to','timezone'],...TaskTime.stats(state,$('from').value,$('to').value).map(r=>[r.type,r.count,r.min==null?'':r.min/1000,r.max==null?'':r.max/1000,r.avg==null?'':r.avg/1000,r.total/1000,$('from').value,$('to').value,Intl.DateTimeFormat().resolvedOptions().timeZone])];download(`TaskTime-${$('from').value}-${$('to').value}.csv`,'﻿'+rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n'),'text/csv;charset=utf-8')};
 $('backup').onclick=()=>download(`TaskTime-backup-${today()}.json`,JSON.stringify(state,null,2),'application/json');

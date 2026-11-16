@@ -1,5 +1,5 @@
 <!doctype html><html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TaskTime</title><link rel="icon" href="icons/icon32.png"><link rel="stylesheet" href="dashboard.css"></head><body>
-<header class="top"><div class="brand"><img src="icons/icon48.png" alt=""><span>TaskTime</span></div><div id="status" class="status"></div><select id="lang" aria-label="Language"><option value="bg">БГ</option><option value="en">EN</option></select></header>
+<header class="top"><div class="brand"><img src="icons/icon48.png" alt=""><span>TaskTime</span></div><div id="status" class="status"></div><div id="lang" class="seg" role="radiogroup" aria-label="Language"><button role="radio" data-lang="bg">БГ</button><button role="radio" data-lang="en">EN</button></div></header>
 <nav class="tabs" id="tabs" role="tablist"></nav>
 <main>
 <div id="update"></div><div id="questions"></div>
@@ -10,7 +10,7 @@
 <section data-tab="history"><div class="card"><div class="toolbar"><input id="search" type="search"></div><div id="history" class="list"></div></div></section>
 <section data-tab="settings"><div class="card"><h2 id="alertTitle"></h2><p class="hint" id="alertNote"></p>
 <label class="row"><span id="alertSoundLabel"></span><input id="alertSound" type="checkbox" class="switch"></label>
-<label class="row"><span id="alertVolumeLabel"></span><input id="alertVolume" type="range" min="0" max="1" step="0.05"></label>
+<label class="row"><span id="alertVolumeLabel"></span><span class="vol"><input id="alertVolume" type="range" min="0" max="1" step="0.05"><output id="alertVolumeOut"></output></span></label>
 <div class="row"><span></span><button id="alertTest" class="ghost"></button></div>
 <label class="row"><span id="alertNotifyLabel"></span><input id="alertNotify" type="checkbox" class="switch"></label></div>
 <div class="card"><h2 id="verTitle"></h2><p class="hint" id="verNote"></p><button id="verCheck" class="ghost"></button></div><div class="card"><h2 id="dataTitle"></h2><p class="hint" id="dataNote"></p><div class="btns"><button id="backup" class="ghost"></button><button id="restore" class="ghost"></button><input id="restoreFile" type="file" accept=".json,application/json" hidden></div></div></section>
