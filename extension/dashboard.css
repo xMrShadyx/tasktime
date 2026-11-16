@@ -35,3 +35,4 @@ input[type=range]{width:200px;accent-color:var(--brand)}
 .empty{color:var(--muted);text-align:center;padding:24px}
 #message{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:10px;padding:10px 16px;margin:0}#message:empty{display:none}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
+.update{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--brand);color:var(--brand-ink);border-radius:12px;padding:14px 18px;margin-bottom:12px}.update b{font-size:15px}.update span{flex:1;min-width:220px;opacity:.9;font-size:13px}.update a{background:var(--lime);color:#17302b;text-decoration:none;font-weight:700;border-radius:8px;padding:8px 14px}

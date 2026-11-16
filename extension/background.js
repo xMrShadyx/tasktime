@@ -5,7 +5,7 @@ async function badge(s){
  const shift=s.shifts.find(x=>x.id===s.shift);
  const color=s.clock==='in'?'green':s.clock==='out'&&shift&&!shift.end&&shift.breaks.some(b=>!b.end)?'orange':'red';
  await chrome.action.setIcon({path:{16:'icons/'+color+'16.png',32:'icons/'+color+'32.png'}});
- await chrome.action.setBadgeBackgroundColor({color:'#245c4b'});await chrome.action.setBadgeText({text:s.prompts.length?String(s.prompts.length):s.tasks.some(t=>t.status==='review')?'!':''})}
+ await chrome.action.setBadgeBackgroundColor({color:'#245c4b'});await chrome.action.setBadgeText({text:s.prompts.length?String(s.prompts.length):s.tasks.some(t=>t.status==='review')?'!':s.update?'↑':''})}
 function serialized(fn){const result=queue.then(fn);queue=result.catch(()=>{});return result}
 async function apply(e){const s=await read();TaskTime.reduce(s,e);await chrome.storage.local.set({tasktime:s});await badge(s);return s}
 chrome.runtime.onMessage.addListener((m,sender,reply)=>{
@@ -17,6 +17,7 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
   if(m.kind==='language'&&ownPage){const s=await read();s.lang=m.lang==='en'?'en':'bg';await chrome.storage.local.set({tasktime:s});return {ok:true}}
   if(m.kind==='answer'&&(ownPage||sender.tab))return apply({kind:'answer',id:m.id,value:String(m.value).slice(0,20),at:Date.now()});
   if(m.kind==='restore'&&ownPage){const d=m.data;if(!d||typeof d!=='object'||d.schema!==1||!['tasks','shifts','prompts','audit'].every(k=>Array.isArray(d[k])))throw Error('invalid-backup');const s={...TaskTime.fresh(),...d};await chrome.storage.local.set({tasktime:s});await badge(s);return {tasks:s.tasks.length,shifts:s.shifts.length}}
+  if(m.kind==='check-update'&&ownPage)return checkUpdate(true);
   if(m.kind==='alert-settings'&&ownPage){const s=await read();s.alert=TaskTime.alertSettings({alert:m.alert});await chrome.storage.local.set({tasktime:s});return s.alert}
   if(m.kind==='test-sound'&&ownPage){await beep(TaskTime.alertSettings(await read()).volume,sender.tab?.id);return {ok:true}}
   if(m.kind==='correct-task'&&ownPage)return apply({kind:m.kind,key:m.key,status:m.status,at:Date.now()});
@@ -34,8 +35,19 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
 });
 chrome.action.onClicked.addListener(()=>chrome.tabs.create({url:chrome.runtime.getURL('dashboard.html')}));
 chrome.tabs.onRemoved.addListener(tab=>serialized(()=>apply({kind:'tab-closed',tab,at:Date.now()})).catch(console.error));
-chrome.alarms.onAlarm.addListener(()=>serialized(()=>apply({kind:'tick',at:Date.now()})).catch(console.error));
-async function boot(){if(!await chrome.alarms.get('tasktime-tick'))await chrome.alarms.create('tasktime-tick',{periodInMinutes:1});await badge(await read())}
+chrome.alarms.onAlarm.addListener(()=>{serialized(()=>apply({kind:'tick',at:Date.now()})).catch(console.error);reloadIfReplaced();serialized(()=>checkUpdate(false)).catch(console.error)});
+/* Updates: the site publishes version.json. A new version is installed by extracting the ZIP over the same folder;
+   the extension notices the newer manifest on disk and reloads itself, keeping its data. */
+const SITE='https://xmrshadyx.github.io/tasktime/';
+const newer=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<Math.max(x.length,y.length);i++){if((x[i]||0)!==(y[i]||0))return (x[i]||0)>(y[i]||0)}return false};
+async function reloadIfReplaced(){try{const m=await (await fetch(chrome.runtime.getURL('manifest.json'),{cache:'no-store'})).json();if(m.version&&m.version!==chrome.runtime.getManifest().version)chrome.runtime.reload()}catch{}}
+async function checkUpdate(force){const s=await read();const last=s.health?.updateChecked||0;if(!force&&Date.now()-last<6*3600e3)return s.update||null;
+ let info=null;try{const r=await fetch(SITE+'version.json',{cache:'no-store'});if(r.ok)info=await r.json()}catch{}
+ if(!info?.version)return s.update||null;
+ s.health={...(s.health||{}),updateChecked:Date.now()};const cur=chrome.runtime.getManifest().version;
+ s.update=info&&newer(info.version,cur)?{version:String(info.version).slice(0,20),url:SITE+'#s0'}:null;
+ await chrome.storage.local.set({tasktime:s});await badge(s);return s.update}
+async function boot(){serialized(()=>checkUpdate(false)).catch(console.error);if(!await chrome.alarms.get('tasktime-tick'))await chrome.alarms.create('tasktime-tick',{periodInMinutes:1});await badge(await read())}
 chrome.runtime.onInstalled.addListener(()=>serialized(boot).catch(console.error));chrome.runtime.onStartup.addListener(()=>serialized(boot).catch(console.error));serialized(boot).catch(console.error);
 
 /* New-task alert: chime when a new task opens while its tab is not in focus; repeat every 10 s until focused. */

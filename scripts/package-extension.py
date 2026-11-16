@@ -93,5 +93,6 @@ for browser,url in [('Chrome','chrome://extensions'),('Opera','opera://extension
             if file.is_file(): archive.write(file,file.relative_to(EXT).as_posix())
         archive.writestr('INSTALL.txt',readme.format(browser=browser,url=url))
     meta.append({'browser':browser,'file':target.name,'bytes':target.stat().st_size,'sha256':hashlib.sha256(target.read_bytes()).hexdigest()})
+(ROOT/'dist'/'version.json').write_text(json.dumps({'version':json.loads((EXT/'manifest.json').read_text(encoding='utf-8'))['version']}),encoding='utf-8')
 (DOWNLOADS/'checksums.json').write_text(json.dumps(meta,indent=2),encoding='utf-8')
 print(json.dumps(meta,indent=2))
