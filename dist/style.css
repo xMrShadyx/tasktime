@@ -8,3 +8,4 @@
 .callout.danger{background:#fef2f2;border-left-color:#dc2626;color:#7f1d1d}.callout.danger strong{color:#b91c1c}
 @media (prefers-color-scheme:dark){.callout.danger{background:#2a1214;color:#fecaca}.callout.danger strong{color:#f87171}}
 .brand img,.download-intro img,.icon-download img{filter:grayscale(1) contrast(1.1)}
+.update-steps{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}.update-steps h3{margin-bottom:6px}.update-steps ol{padding-left:20px;font-size:14px}.update-steps li{margin:6px 0}
