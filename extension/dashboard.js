@@ -1,27 +1,115 @@
-let state;let lang='bg';const $=id=>document.getElementById(id);
-const W={bg:{title:'Твоят работен отчет',intro:'Локален личен отчет · часовата зона е тази на компютъра.',warning:'Тестова версия 0.1.2. Сигналите от реалните сайтове още не са валидирани. Часовете са моменти на наблюдение, а не официалният таймер. При първо отваряне на Ximble вече започнала смяна се записва от момента на наблюдение. Дръж Ximble отворен. Пази JSON архив преди обновяване или премахване на добавката.',stats:'Статистика по тип',from:'От',to:'До',csv:'Свали CSV за Excel',backup:'JSON архив',heads:['Тип','Брой','Най-бърза','Най-бавна','Средно','Общо'],note:'Времена ч:мм:сс. Само завършени задачи без засечени пропуски или ръчно потвърдени записи. „Днес“ се определя по датата на завършване.',shifts:'Смени и работни интервали',review:'За преглед',reviewNote:'При пропуски времето е само наблюдаваната част. Потвърди само ако приемаш този запис за отчета. Всяка корекция остава в JSON архива.',history:'Последни задачи',empty:'Все още няма записи.',plan:'До колко часа е смяната ти?',out:'Почивка или приключваш работа?',over:'Планираната смяна приключи. Още ли работиш?',reminder:'Направи Clock Out в Ximble. Краят още не е потвърден.',save:'Запази',break:'Почивка',finish:'Приключвам',overtime:'Продължавам с overtime',confirm:'Включи като завършена',exclude:'Изключи от статистиката',active:'Активна',completed:'Завършена',excluded:'Изключена',reviewStatus:'За преглед',observed:'Наблюдавано време',work:'Clock In интервали',breaks:'Потвърдени почивки',after:'След планирания край',pending:'Няма потвърден край',uncertain:'Има ненаблюдавани периоди / начало по наблюдение',planned:'Планиран край',confirmed:'Потвърден overtime',unconfirmed:'Overtime не е потвърден',corrected:'Ръчна корекция',saved:'Запазено',invalid:'Избери валиден период.',gap:'Пропуски',nextDate:'Край с дата'},en:{title:'Your work report',intro:'Local personal report · uses the computer’s time zone.',warning:'Beta 0.1.2. Live website signals have not been validated yet. Timestamps are observation times, not the official timer. Opening Ximble during an existing shift records it only from first observation. Keep Ximble open. Export a JSON backup before updating or removing the extension.',stats:'Statistics by task type',from:'From',to:'To',csv:'Download CSV for Excel',backup:'JSON backup',heads:['Type','Count','Fastest','Slowest','Average','Total'],note:'Times h:mm:ss. Includes completed tasks without detected gaps, or manually accepted records. “Today” uses the completion date.',shifts:'Shifts and work intervals',review:'Needs review',reviewNote:'For interrupted tasks, duration covers only observed portions. Confirm only if you accept this record in your report. Corrections remain in the JSON backup.',history:'Recent tasks',empty:'No records yet.',plan:'What time does your shift end?',out:'Taking a break or finishing work?',over:'Your planned shift has ended. Still working?',reminder:'Clock Out in Ximble. The end is not yet confirmed.',save:'Save',break:'Take a break',finish:'Finish work',overtime:'Continue with overtime',confirm:'Include as completed',exclude:'Exclude from statistics',active:'Active',completed:'Completed',excluded:'Excluded',reviewStatus:'Needs review',observed:'Observed time',work:'Clock In intervals',breaks:'Confirmed breaks',after:'After planned end',pending:'No confirmed end',uncertain:'Unobserved periods / start recorded on observation',planned:'Planned end',confirmed:'Overtime confirmed',unconfirmed:'Overtime not confirmed',corrected:'Manual correction',saved:'Saved',invalid:'Choose a valid date range.',gap:'Gaps',nextDate:'End date'}};
-Object.assign(W.bg,{alertTitle:'Сигнал за нова задача',alertNote:'Звукът се пуска само ако прозорецът с Redstone не е на фокус, и се повтаря на 10 секунди, докато не се върнеш в него.',alertSound:'Звуков сигнал',alertVolume:'Сила на звука',alertTest:'Пробвай звука',alertNotify:'Известие в системата',alertDenied:'Браузърът не позволи известия.'});
-Object.assign(W.en,{alertTitle:'New task alert',alertNote:'The sound plays only when the Redstone window is not in focus, and repeats every 10 seconds until you return to it.',alertSound:'Sound alert',alertVolume:'Volume',alertTest:'Test sound',alertNotify:'System notification',alertDenied:'The browser did not allow notifications.'});
-function drawAlert(){const w=W[lang],a=TaskTime.alertSettings(state);for(const [id,key] of [['alertTitle','alertTitle'],['alertNote','alertNote'],['alertSoundLabel','alertSound'],['alertVolumeLabel','alertVolume'],['alertTest','alertTest'],['alertNotifyLabel','alertNotify']])$(id).textContent=w[key];$('alertSound').checked=a.sound;$('alertVolume').value=a.volume;$('alertVolume').disabled=!a.sound;$('alertNotify').checked=a.notify}
-async function saveAlert(change){try{const a={...TaskTime.alertSettings(state),...change};state.alert=await request({kind:'alert-settings',alert:a});drawAlert();message(W[lang].saved)}catch(e){message(e.message)}}
-const fmt=ms=>ms==null?'—':`${Math.floor(Math.max(0,Math.round(ms/1000))/3600)}:${String(Math.floor(Math.max(0,Math.round(ms/1000))/60)%60).padStart(2,'0')}:${String(Math.max(0,Math.round(ms/1000))%60).padStart(2,'0')}`;
-const dt=ms=>ms?new Date(ms).toLocaleString(lang==='bg'?'bg-BG':'en-GB'):'—';
-const el=(tag,text)=>{const e=document.createElement(tag);if(text!=null)e.textContent=text;return e};
+let state;let lang='bg';let tab='today';const $=id=>document.getElementById(id);
+const W={bg:{tabs:{today:'Днес',stats:'Статистика',shifts:'Смени',review:'За преглед',history:'История',settings:'Настройки'},
+status:{in:'На смяна',break:'В почивка',out:'Извън смяна'},
+kpi:['Завършени задачи','Време в задачи','Средно на задача','Работено време'],
+todayTypes:'Задачи днес по тип',shiftNow:'Текуща смяна',recent:'Последни задачи',noShift:'В момента не си на смяна.',
+started:'Начало',planned:'Планиран край',worked:'Работено',breaks:'Почивки',overtime:'След планирания край',ended:'Край',open:'продължава',
+otYes:'overtime потвърден',otNo:'overtime не е потвърден',
+presets:[['today','Днес'],['week','7 дни'],['month','Този месец']],from:'От',to:'До',csv:'Свали CSV',heads:['Тип','Брой','Най-бърза','Най-бавна','Средно','Общо'],total:'Общо',
+statsNote:'Броят се само завършените задачи, по датата на завършване. Времето е ч:мм:сс.',
+reviewNote:'TaskTime не е сигурен, че тези задачи са приключили нормално. Потвърди ги, за да влязат в статистиката, или ги изключи.',
+search:'Търси по тип, лига или ID…',
+reasons:{'next-task':'мина към следваща задача','left-task':'напусна задачата','tab-closed':'затворен таб','tab-conflict':'отворена в друг таб'},
+noFinish:'без Finish / Clear Samples',gaps:n=>`${n} прекъсвания`,
+confirm:'Потвърди',exclude:'Изключи',status_:{active:'Активна',completed:'Завършена',review:'За преглед',excluded:'Изключена'},corrected:'ръчно',
+alertTitle:'Сигнал за нова задача',alertNote:'🟢 при нова задача, докато не гледаш Redstone · 🟠 при „Are you still active?“ · 🔴 когато остават 5 секунди.',alertSound:'Звуков сигнал',alertVolume:'Сила на звука',alertTest:'Пробвай звука',alertNotify:'Известие в системата',alertDenied:'Браузърът не позволи известия.',
+dataTitle:'Твоите данни',dataNote:'Записите стоят само в този браузър. Ако премахнеш добавката, те се изтриват — първо свали архив.',backup:'Свали архив (JSON)',
+q:{plan:'До колко часа е смяната ти?',out:'Почивка или приключваш работа?',over:'Планираната смяна приключи. Още ли работиш?',reminder:'Направи Clock Out в Ximble, за да се потвърди краят.'},
+save:'Запази',break:'Почивка',finish:'Приключвам',ot:'Продължавам с overtime',endDate:'Край',empty:'Още няма записи.',saved:'Запазено',invalid:'Избери валиден период.'},
+en:{tabs:{today:'Today',stats:'Statistics',shifts:'Shifts',review:'To review',history:'History',settings:'Settings'},
+status:{in:'On shift',break:'On a break',out:'Off shift'},
+kpi:['Completed tasks','Time in tasks','Average per task','Time worked'],
+todayTypes:'Today’s tasks by type',shiftNow:'Current shift',recent:'Recent tasks',noShift:'You are not on shift right now.',
+started:'Start',planned:'Planned end',worked:'Worked',breaks:'Breaks',overtime:'After planned end',ended:'End',open:'ongoing',
+otYes:'overtime confirmed',otNo:'overtime not confirmed',
+presets:[['today','Today'],['week','7 days'],['month','This month']],from:'From',to:'To',csv:'Download CSV',heads:['Type','Count','Fastest','Slowest','Average','Total'],total:'Total',
+statsNote:'Only completed tasks count, by completion date. Time is h:mm:ss.',
+reviewNote:'TaskTime is not sure these tasks finished normally. Confirm them to include them in statistics, or exclude them.',
+search:'Search by type, league or ID…',
+reasons:{'next-task':'moved to next task','left-task':'left the task','tab-closed':'tab closed','tab-conflict':'opened in another tab'},
+noFinish:'no Finish / Clear Samples',gaps:n=>`${n} interruptions`,
+confirm:'Confirm',exclude:'Exclude',status_:{active:'Active',completed:'Completed',review:'To review',excluded:'Excluded'},corrected:'manual',
+alertTitle:'New task alert',alertNote:'🟢 on a new task while you are not looking at Redstone · 🟠 on “Are you still active?” · 🔴 when 5 seconds are left.',alertSound:'Sound alert',alertVolume:'Volume',alertTest:'Test sound',alertNotify:'System notification',alertDenied:'The browser did not allow notifications.',
+dataTitle:'Your data',dataNote:'Records are stored only in this browser. Removing the extension deletes them — download a backup first.',backup:'Download backup (JSON)',
+q:{plan:'What time does your shift end?',out:'Taking a break or finishing work?',over:'Your planned shift has ended. Still working?',reminder:'Clock Out in Ximble to confirm the end.'},
+save:'Save',break:'Take a break',finish:'Finish work',ot:'Continue with overtime',endDate:'End',empty:'No records yet.',saved:'Saved',invalid:'Choose a valid date range.'}};
+const TABS=['today','stats','shifts','review','history','settings'];
+const sec=ms=>Math.max(0,Math.round((ms||0)/1000));
+const fmt=ms=>ms==null?'—':`${Math.floor(sec(ms)/3600)}:${String(Math.floor(sec(ms)/60)%60).padStart(2,'0')}:${String(sec(ms)%60).padStart(2,'0')}`;
+const short=ms=>{if(ms==null)return '—';const s=sec(ms),h=Math.floor(s/3600),m=Math.floor(s/60)%60;return h?`${h}${lang==='bg'?'ч':'h'} ${m}${lang==='bg'?'м':'m'}`:`${m}:${String(s%60).padStart(2,'0')}`};
+const loc=()=>lang==='bg'?'bg-BG':'en-GB';
+const dt=ms=>ms?new Date(ms).toLocaleString(loc(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const hm=ms=>ms?new Date(ms).toLocaleTimeString(loc(),{hour:'2-digit',minute:'2-digit'}):'—';
+const el=(tag,props={},...kids)=>{const e=document.createElement(tag);for(const [k,v] of Object.entries(props)){if(k==='class')e.className=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e[k]=v}for(const k of kids.flat())if(k!=null)e.append(k);return e};
 async function request(m){const r=await chrome.runtime.sendMessage(m);if(r?.error)throw Error(r.error);return r.result}
-function message(text){$('message').textContent=text;setTimeout(()=>$('message').textContent='',8000)}
+let msgTimer;function message(t){$('message').textContent=t;clearTimeout(msgTimer);msgTimer=setTimeout(()=>$('message').textContent='',4000)}
 async function mutate(m){try{await request(m);await load();message(W[lang].saved)}catch(e){message(e.message)}}
-function download(name,text,type){const u=URL.createObjectURL(new Blob([text],{type}));const a=el('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function download(name,text,type){const u=URL.createObjectURL(new Blob([text],{type}));el('a',{href:u,download:name}).click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+const today=()=>TaskTime.dateKey(Date.now());
+const shiftOf=s=>s.shifts.find(x=>x.id===s.shift);
+const sumIntervals=(xs,from=0)=>xs.reduce((a,i)=>a+Math.max(0,(i.end||Date.now())-Math.max(i.start,from)),0);
+function clockState(){const sh=shiftOf(state);if(state.clock==='in')return 'in';if(sh&&!sh.end&&sh.breaks.some(b=>!b.end))return 'break';return 'out'}
+
+function drawChrome(){const w=W[lang];document.documentElement.lang=lang;$('lang').value=lang;
+ const cs=clockState();$('status').className='status '+cs;$('status').replaceChildren(el('i'),w.status[cs]);
+ const nReview=state.tasks.filter(t=>t.status==='review').length;
+ $('tabs').replaceChildren(...TABS.map(t=>el('button',{role:'tab',ariaSelected:String(t===tab),onclick:()=>{tab=t;try{localStorage.setItem('tt-tab',t)}catch{}draw()}},w.tabs[t],t==='review'&&nReview?el('span',{class:'count',textContent:nReview}):null)));
+ document.querySelectorAll('section[data-tab]').forEach(s=>s.classList.toggle('on',s.dataset.tab===tab))}
+
+function drawQuestions(){const w=W[lang];const box=$('questions');if(box.contains(document.activeElement))return;box.replaceChildren();
+ for(const p of state.prompts){const q=el('div',{class:'question'},el('h3',{textContent:w.q[{plan:'plan','clock-out':'out',overtime:'over',reminder:'reminder'}[p.kind]]}),el('p',{textContent:dt(p.at)}));
+  const btn=(text,value,ghost)=>q.append(el('button',{class:ghost?'ghost':'',textContent:text,onclick:()=>mutate({kind:'answer',id:p.id,value:typeof value==='function'?value():value})}));
+  if(p.kind==='plan'){const input=el('input',{type:'time'});const prev=el('span',{class:'hint'});input.oninput=()=>{try{prev.textContent=w.endDate+': '+dt(TaskTime.planTime(p.at,input.value))}catch{prev.textContent=''}};q.append(input);btn(w.save,()=>input.value);q.append(prev)}
+  if(p.kind==='clock-out'){btn(w.break,'break');btn(w.finish,'finish',true)}
+  if(p.kind==='overtime'){btn(w.ot,'overtime');btn(w.finish,'finish',true)}
+  box.append(q)}}
+
+function taskItem(t,actions){const w=W[lang];const why=[];if(t.reason&&t.status!=='completed')why.push(w.reasons[t.reason]||t.reason);if(!t.finishAt&&t.status==='review')why.push(w.noFinish);if(t.gaps?.length)why.push(w.gaps(t.gaps.length));
+ const it=el('div',{class:'item'},el('div',{class:'main'},el('div',{},el('b',{textContent:t.type}),' ',el('span',{class:'chip '+t.status,textContent:w.status_[t.status]+(t.corrected?' · '+w.corrected:'')})),el('small',{textContent:`${t.league||'football'} · ${dt(t.start)} → ${t.end?hm(t.end):'…'}${why.length?' · '+why.join(', '):''}`,title:t.id})),el('span',{class:'dur',textContent:fmt(t.observedMs)}));
+ if(actions){it.append(el('button',{textContent:w.confirm,onclick:()=>mutate({kind:'correct-task',key:t.key,status:'completed'})}),el('button',{class:'danger',textContent:w.exclude,onclick:()=>mutate({kind:'correct-task',key:t.key,status:'excluded'})}))}
+ return it}
+const empty=()=>el('div',{class:'empty',textContent:W[lang].empty});
+
+function drawToday(){const w=W[lang];const k=today();const done=state.tasks.filter(t=>t.status==='completed'&&t.end&&TaskTime.dateKey(t.end)===k);const total=done.reduce((a,t)=>a+t.observedMs,0);
+ const sh=shiftOf(state)||[...state.shifts].reverse().find(s=>TaskTime.dateKey(s.start)===k);const worked=sh?sumIntervals(sh.intervals):null;
+ $('kpis').replaceChildren(...[[done.length,w.kpi[0]],[short(total),w.kpi[1]],[done.length?short(total/done.length):'—',w.kpi[2]],[worked==null?'—':short(worked),w.kpi[3]]].map(([v,l])=>el('div',{class:'kpi'},el('b',{textContent:v}),el('span',{textContent:l}))));
+ $('todayTypesTitle').textContent=w.todayTypes;const by={};for(const t of done)by[t.type]=(by[t.type]||0)+1;const max=Math.max(1,...Object.values(by));
+ $('todayTypes').replaceChildren(...(Object.keys(by).length?Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([type,n])=>el('div',{class:'bar'},el('span',{textContent:type}),el('div',{},el('i',{style:`width:${n/max*100}%`})),el('b',{textContent:n}))):[empty()]));
+ $('shiftNowTitle').textContent=w.shiftNow;$('shiftNow').replaceChildren(shiftOf(state)?shiftFacts(shiftOf(state)):el('p',{class:'hint',textContent:w.noShift}));
+ $('recentTitle').textContent=w.recent;const recent=state.tasks.slice(-8).reverse();$('recent').replaceChildren(...(recent.length?recent.map(t=>taskItem(t)):[empty()]))}
+
+function shiftFacts(sh){const w=W[lang];const breaks=sumIntervals(sh.breaks);const after=sh.planned?sumIntervals(sh.intervals,sh.planned):null;
+ return el('div',{class:'facts'},...[[w.started,dt(sh.start)],[w.planned,sh.planned?hm(sh.planned):'—'],[w.worked,fmt(sumIntervals(sh.intervals))],[w.breaks,fmt(breaks)],[w.overtime,after==null?'—':fmt(after)]].map(([a,b])=>el('div',{},el('span',{textContent:a}),el('b',{textContent:b}))))}
+
+let preset='today';
+function setPreset(p){preset=p;const d=new Date();let from=today();if(p==='week'){d.setDate(d.getDate()-6);from=TaskTime.dateKey(+d)}if(p==='month'){d.setDate(1);from=TaskTime.dateKey(+d)}$('from').value=from;$('to').value=today();drawStats()}
 function validRange(){return $('from').value&&$('to').value&&$('from').value<=$('to').value}
-function drawStats(){const w=W[lang];if(!validRange()){message(w.invalid);return}$('head').replaceChildren();const tr=el('tr');w.heads.forEach(t=>tr.append(el('th',t)));$('head').append(tr);$('rows').replaceChildren();TaskTime.stats(state,$('from').value,$('to').value).forEach(r=>{const tr=el('tr');[r.type,r.count,fmt(r.min),fmt(r.max),fmt(r.avg),fmt(r.total)].forEach(x=>tr.append(el('td',x)));$('rows').append(tr)})}
-function drawQuestions(){const w=W[lang];$('questions').replaceChildren();for(const p of state.prompts){const box=el('div');box.className='question';box.append(el('h3',w[{plan:'plan','clock-out':'out',overtime:'over',reminder:'reminder'}[p.kind]]),el('p',dt(p.at)));const btn=(text,value)=>{const b=el('button',text);b.onclick=()=>mutate({kind:'answer',id:p.id,value:typeof value==='function'?value():value});box.append(b)};if(p.kind==='plan'){const input=el('input');input.type='time';input.setAttribute('aria-label',w.plan);const preview=el('p');input.oninput=()=>{try{preview.textContent=w.nextDate+': '+dt(TaskTime.planTime(p.at,input.value))}catch{preview.textContent=''}};box.append(input,preview);btn(w.save,()=>input.value)}if(p.kind==='clock-out'){btn(w.break,'break');btn(w.finish,'finish')}if(p.kind==='overtime'){btn(w.overtime,'overtime');btn(w.finish,'finish')}$('questions').append(box)}}
-function drawShifts(){const w=W[lang];$('shifts').replaceChildren();if(!state.shifts.length)$('shifts').append(el('p',w.empty));for(const sh of [...state.shifts].reverse()){const box=el('div');box.className='shift';box.append(el('h3',`${dt(sh.start)} → ${sh.end?dt(sh.end):w.pending}`));const work=sh.intervals.reduce((sum,i)=>sum+(i.end?i.end-i.start:Date.now()-i.start),0);const breaks=sh.breaks.reduce((sum,b)=>sum+(b.end?b.end-b.start:Date.now()-b.start),0);const after=sh.planned?sh.intervals.reduce((sum,i)=>sum+Math.max(0,(i.end||Date.now())-Math.max(i.start,sh.planned)),0):null;box.append(el('p',`${w.work}: ${fmt(work)} · ${w.breaks}: ${fmt(breaks)} · ${w.after}: ${fmt(after)}`));box.append(el('p',`${w.planned}: ${dt(sh.planned)} · ${sh.overtime?w.confirmed:w.unconfirmed}`));if(sh.inferredStart||sh.gaps?.length)box.append(el('small',w.uncertain));$('shifts').append(box)}}
-function record(t,review){const w=W[lang];const box=el('div');box.className='record';box.append(el('strong',`${t.type} · ${w[t.status==='review'?'reviewStatus':t.status]||t.status}`),el('p',`${dt(t.start)} → ${dt(t.end)} · ${w.observed}: ${fmt(t.observedMs)} · ${w.gap}: ${t.gaps.length}`),el('code',t.id));if(t.corrected)box.append(el('p',w.corrected));if(review){for(const [label,status] of [[w.confirm,'completed'],[w.exclude,'excluded']]){const b=el('button',label);b.onclick=()=>mutate({kind:'correct-task',key:t.key,status});box.append(b)}}return box}
-function draw(){const w=W[lang];document.documentElement.lang=lang;$('lang').value=lang;$('intro').replaceChildren(el('h1',w.title),el('p',w.intro));$('warning').textContent=w.warning;for(const [id,key] of [['statsTitle','stats'],['fromLabel','from'],['toLabel','to'],['csv','csv'],['backup','backup'],['statsNote','note'],['shiftTitle','shifts'],['reviewTitle','review'],['reviewNote','reviewNote'],['historyTitle','history']])$(id).textContent=w[key];drawAlert();drawStats();drawQuestions();drawShifts();$('review').replaceChildren();const reviews=state.tasks.filter(t=>t.status==='review');if(!reviews.length)$('review').append(el('p',w.empty));reviews.slice(-100).reverse().forEach(t=>$('review').append(record(t,true)));$('history').replaceChildren();if(!state.tasks.length)$('history').append(el('p',w.empty));state.tasks.slice(-50).reverse().forEach(t=>$('history').append(record(t,false)))}
+function drawStats(){const w=W[lang];$('presets').replaceChildren(...w.presets.map(([k,l])=>el('button',{class:k===preset?'on':'',textContent:l,onclick:()=>setPreset(k)})));
+ $('fromLabel').textContent=w.from;$('toLabel').textContent=w.to;$('csv').textContent=w.csv;$('statsNote').textContent=w.statsNote;
+ if(!validRange()){message(w.invalid);return}const rows=TaskTime.stats(state,$('from').value,$('to').value).filter(r=>r.count||TaskTime.TYPES.includes(r.type));
+ $('head').replaceChildren(el('tr',{},...w.heads.map(h=>el('th',{textContent:h}))));
+ $('rows').replaceChildren(...rows.map(r=>el('tr',{class:r.count?'':'zero'},...[r.type,r.count,fmt(r.min),fmt(r.max),fmt(r.avg),fmt(r.total)].map(x=>el('td',{textContent:x})))));
+ const n=rows.reduce((a,r)=>a+r.count,0),tot=rows.reduce((a,r)=>a+r.total,0);$('foot').replaceChildren(el('tr',{},...[w.total,n,'','',n?fmt(tot/n):'—',fmt(tot)].map(x=>el('td',{textContent:x}))))}
+
+function drawShifts(){const w=W[lang];const list=[...state.shifts].reverse();$('shifts').replaceChildren(...(list.length?list.map(sh=>el('div',{class:'card shift'},el('div',{class:'head'},el('h3',{textContent:`${dt(sh.start)} → ${sh.end?hm(sh.end):w.open}`}),el('small',{textContent:sh.planned?(sh.overtime?w.otYes:(sh.endChoice?w.otNo:'')):''})),shiftFacts(sh))):[empty()]))}
+function drawReview(){const w=W[lang];$('reviewNote').textContent=w.reviewNote;const r=state.tasks.filter(t=>t.status==='review').slice(-200).reverse();$('review').replaceChildren(...(r.length?r.map(t=>taskItem(t,true)):[empty()]))}
+function drawHistory(){const w=W[lang];$('search').placeholder=w.search;const q=$('search').value.trim().toLowerCase();const list=state.tasks.slice().reverse().filter(t=>!q||[t.type,t.league,t.id].some(x=>String(x||'').toLowerCase().includes(q))).slice(0,200);$('history').replaceChildren(...(list.length?list.map(t=>taskItem(t)):[empty()]))}
+
+function drawSettings(){const w=W[lang],a=TaskTime.alertSettings(state);for(const id of ['alertTitle','alertNote','dataTitle','dataNote','backup'])$(id).textContent=w[id];$('alertSoundLabel').textContent=w.alertSound;$('alertVolumeLabel').textContent=w.alertVolume;$('alertTest').textContent=w.alertTest;$('alertNotifyLabel').textContent=w.alertNotify;
+ $('alertSound').checked=a.sound;$('alertVolume').value=a.volume;$('alertVolume').disabled=!a.sound;$('alertNotify').checked=a.notify}
+async function saveAlert(change){try{state.alert=await request({kind:'alert-settings',alert:{...TaskTime.alertSettings(state),...change}});drawSettings();message(W[lang].saved)}catch(e){message(e.message)}}
+
+function draw(){drawChrome();drawQuestions();({today:drawToday,stats:drawStats,shifts:drawShifts,review:drawReview,history:drawHistory,settings:drawSettings})[tab]()}
 async function load(){state=await request({kind:'get'});lang=state.lang||'bg';draw()}
-$('from').value=$('to').value=TaskTime.dateKey(Date.now());$('from').onchange=drawStats;$('to').onchange=drawStats;$('lang').onchange=()=>mutate({kind:'language',lang:$('lang').value});
-$('csv').onclick=()=>{if(!validRange())return message(W[lang].invalid);const rows=[['type','count','fastest_seconds','slowest_seconds','average_seconds','total_seconds','from','to','timezone'],...TaskTime.stats(state,$('from').value,$('to').value).map(r=>[r.type,r.count,r.min==null?'':r.min/1000,r.max==null?'':r.max/1000,r.avg==null?'':r.avg/1000,r.total/1000,$('from').value,$('to').value,Intl.DateTimeFormat().resolvedOptions().timeZone])];download(`TaskTime-${$('from').value}-${$('to').value}.csv`,'\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n'),'text/csv;charset=utf-8')};
+
+try{const t=localStorage.getItem('tt-tab');if(TABS.includes(t))tab=t}catch{}
+$('from').value=$('to').value=today();$('from').onchange=$('to').onchange=()=>{preset='';drawStats()};
+$('lang').onchange=()=>mutate({kind:'language',lang:$('lang').value});
+$('search').oninput=drawHistory;
+$('csv').onclick=()=>{if(!validRange())return message(W[lang].invalid);const rows=[['type','count','fastest_seconds','slowest_seconds','average_seconds','total_seconds','from','to','timezone'],...TaskTime.stats(state,$('from').value,$('to').value).map(r=>[r.type,r.count,r.min==null?'':r.min/1000,r.max==null?'':r.max/1000,r.avg==null?'':r.avg/1000,r.total/1000,$('from').value,$('to').value,Intl.DateTimeFormat().resolvedOptions().timeZone])];download(`TaskTime-${$('from').value}-${$('to').value}.csv`,'﻿'+rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n'),'text/csv;charset=utf-8')};
+$('backup').onclick=()=>download(`TaskTime-backup-${today()}.json`,JSON.stringify(state,null,2),'application/json');
 $('alertSound').onchange=()=>saveAlert({sound:$('alertSound').checked});$('alertVolume').onchange=()=>saveAlert({volume:Number($('alertVolume').value)});$('alertTest').onclick=()=>request({kind:'test-sound'}).catch(e=>message(e.message));
 $('alertNotify').onchange=async()=>{const on=$('alertNotify').checked;if(on){let ok=false;try{ok=await chrome.permissions.request({permissions:['notifications']})}catch{}if(!ok){$('alertNotify').checked=false;return message(W[lang].alertDenied)}}else chrome.permissions.remove({permissions:['notifications']}).catch(()=>{});saveAlert({notify:on})};
-$('backup').onclick=()=>download(`TaskTime-backup-${TaskTime.dateKey(Date.now())}.json`,JSON.stringify(state,null,2),'application/json');
-chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes.tasktime){state=changes.tasktime.newValue;lang=state.lang||'bg';// Keep an unfinished answer intact while task heartbeats arrive.
-const focus=document.activeElement;if(!focus||!$('questions').contains(focus))draw();else{drawStats();drawShifts()}}});load().catch(e=>message(e.message));
+chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes.tasktime){state=changes.tasktime.newValue;lang=state.lang||'bg';if(document.activeElement?.id==='search')return drawChrome();draw()}});
+setInterval(()=>{if(state&&tab==='today')drawToday()},30000);
+load().catch(e=>message(e.message));
