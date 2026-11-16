@@ -1,4 +1,5 @@
 importScripts('core.js');
+const BUILD='0.1.5'; // replaced by scripts/package-extension.py; tells the report which background code is really running
 let queue=Promise.resolve();
 const read=async()=> (await chrome.storage.local.get('tasktime')).tasktime||TaskTime.fresh();
 async function badge(s){
@@ -17,6 +18,7 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
   if(m.kind==='language'&&ownPage){const s=await read();s.lang=m.lang==='en'?'en':'bg';await chrome.storage.local.set({tasktime:s});return {ok:true}}
   if(m.kind==='answer'&&(ownPage||sender.tab))return apply({kind:'answer',id:m.id,value:String(m.value).slice(0,20),at:Date.now()});
   if(m.kind==='restore'&&ownPage){const d=m.data;if(!d||typeof d!=='object'||d.schema!==1||!['tasks','shifts','prompts','audit'].every(k=>Array.isArray(d[k])))throw Error('invalid-backup');const s={...TaskTime.fresh(),...d};await chrome.storage.local.set({tasktime:s});await badge(s);return {tasks:s.tasks.length,shifts:s.shifts.length}}
+  if(m.kind==='build'&&ownPage)return BUILD;
   if(m.kind==='check-update'&&ownPage)return checkUpdate(true);
   if(m.kind==='alert-settings'&&ownPage){const s=await read();s.alert=TaskTime.alertSettings({alert:m.alert});await chrome.storage.local.set({tasktime:s});return s.alert}
   if(m.kind==='test-sound'&&ownPage){await beep(TaskTime.alertSettings(await read()).volume,sender.tab?.id);return {ok:true}}
