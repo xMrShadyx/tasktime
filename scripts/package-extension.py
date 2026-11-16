@@ -88,6 +88,8 @@ Browser names/icons identify compatibility only; no affiliation or endorsement.
 import re
 bg=(EXT/'background.js').read_text(encoding='utf-8');ver=json.loads((EXT/'manifest.json').read_text(encoding='utf-8'))['version']
 (EXT/'background.js').write_text(re.sub(r"const BUILD='[^']*'",f"const BUILD='{ver}'",bg,count=1),encoding='utf-8')
+app=ROOT/'dist'/'app.js'
+if app.exists():app.write_text(re.sub(r"const VERSION='[^']*'",f"const VERSION='{ver}'",app.read_text(encoding='utf-8'),count=1),encoding='utf-8')
 meta=[]
 for browser,url in [('Chrome','chrome://extensions'),('Opera','opera://extensions')]:
     target=DOWNLOADS/f'tasktime-{browser.lower()}-0.1.6.zip'
