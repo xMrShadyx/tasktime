@@ -1,4 +1,4 @@
-const VERSION='0.1.6';
+const VERSION='0.1.7';
 const ico={bell:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
 tab:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".5" fill="currentColor"/></svg>',
 pop:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="11" y="13" width="8" height="6" rx="1"/></svg>'};
@@ -14,7 +14,7 @@ stageNote:'Щом се върнеш в таба, всичко изчезва с�
 notH:'Известие в ъгъла на екрана',notP:'По избор, включва се с едно натискане в отчета. Показва лигата и типа на задачата — клик по него те връща направо в Redstone. Полезно, ако работиш със спрян звук.',
 panH:'Въпросите не ти пречат',panP:'При Clock In / Clock Out в Ximble малко прозорче пита само най-важното — почивка ли е или край на смяната. Стои, докато отговориш, без да прекъсва работата.',
 howEy:'Как работи',howH:'Работиш както винаги. TaskTime се грижи за останалото.',
-how:[['Отваряш задача','TaskTime я разпознава веднага — всяка лига и всеки тип.'],['Работиш','Кликове, Auto Advance, презареждане — всичко е част от същата задача.'],['Натискаш Finish','Finish или Clear Samples & Next / Exit приключват задачата.'],['Чакаш следващата','Минаваш в друг прозорец. Щом излезе нова — сигнал.']],
+how:[['Отваряш задача','TaskTime я разпознава веднага — всяка лига (uefa, efl, wnba, ncaa…) и всеки тип.'],['Работиш','Кликове, Auto Advance, презареждане — всичко е част от същата задача.'],['Натискаш Finish','Finish или Clear Samples & Next / Exit приключват задачата.'],['Чакаш следващата','Минаваш в друг прозорец. Щом излезе нова — сигнал.']],
 repEy:'Отчет',repH:'И личен отчет — за любопитните.',repP:'Натисни иконката на TaskTime и виждаш деня си: колко задачи, колко време, кога е почивката. Всичко се записва само, без засичане.',
 gallery:[['dash-today','Днес','Броят задачи, времето и текущата смяна с един поглед.'],['dash-stats','Статистика','По тип задача — за ден, седмица или месец, с износ в Excel.'],['dash-settings','Настройки','Звук, сила, известия — с обяснение до всяка опция.']],
 insEy:'Инсталиране',insH:'Готово за минута.',insP:'Свали файла за своя браузър и следвай трите стъпки.',
@@ -40,7 +40,7 @@ stageNote:'As soon as you return to the tab, everything clears on its own.',
 notH:'A notification in the screen corner',notP:'Optional, one switch in the report. Shows the task league and type — clicking it takes you straight back to Redstone. Handy if you work with sound off.',
 panH:'Questions don’t get in the way',panP:'On Clock In / Clock Out in Ximble a small box asks only what matters — a break or the end of the shift. It stays until you answer, without interrupting work.',
 howEy:'How it works',howH:'Work as usual. TaskTime takes care of the rest.',
-how:[['Open a task','TaskTime recognises it instantly — any league, any type.'],['Work','Clicks, Auto Advance, reloads — all part of the same task.'],['Press Finish','Finish or Clear Samples & Next / Exit completes the task.'],['Wait for the next','Switch to another window. When a new one arrives — alert.']],
+how:[['Open a task','TaskTime recognises it instantly — any league (uefa, efl, wnba, ncaa…), any type.'],['Work','Clicks, Auto Advance, reloads — all part of the same task.'],['Press Finish','Finish or Clear Samples & Next / Exit completes the task.'],['Wait for the next','Switch to another window. When a new one arrives — alert.']],
 repEy:'Report',repH:'And a personal report — for the curious.',repP:'Click the TaskTime icon and see your day: how many tasks, how much time, when the break was. Everything is recorded automatically.',
 gallery:[['dash-today','Today','Task count, time and the current shift at a glance.'],['dash-stats','Statistics','By task type — for a day, week or month, with Excel export.'],['dash-settings','Settings','Sound, volume, notifications — with an explanation next to each option.']],
 insEy:'Install',insH:'Ready in a minute.',insP:'Download the file for your browser and follow three steps.',

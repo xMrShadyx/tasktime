@@ -61,7 +61,7 @@ TaskTime е добавка за **Google Chrome** и **Opera**, която те 
 - Дръж **Ximble отворен** в отделен таб през цялата смяна.
 - Работи както винаги. TaskTime само наблюдава. Никога не натиска бутони и не променя нищо в Redstone или Ximble.
 
-TaskTime разпознава задачите от всички лиги (uefa, efl, ligue1 и т.н.) и от всички типове: ball, player, single_player, reid, lineup, refs и останалите.
+TaskTime разпознава задачите от всички лиги, включително нови (uefa, efl, ligue1, ncaa-mb, ncaa-wb, wnba, svk1l, hpl, cbf1, dfd и т.н.) и от всички типове: ball, player, single_player, reid, lineup, refs и останалите.
 
 ---
 
