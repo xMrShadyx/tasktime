@@ -8,7 +8,7 @@ otYes:'overtime потвърден',otNo:'overtime не е потвърден',
 presets:[['today','Днес'],['week','7 дни'],['month','Този месец']],from:'От',to:'До',csv:'Свали CSV',heads:['Тип','Брой','Най-бърза','Най-бавна','Средно','Общо'],total:'Общо',
 statsNote:'Броят се само завършените задачи, по датата на завършване. Времето е ч:мм:сс.',
 reviewNote:'TaskTime не е сигурен, че тези задачи са приключили нормално. Потвърди ги, за да влязат в статистиката, или ги изключи.',
-search:'Търси по тип, лига или ID…',
+search:'Търси по тип, лига или ID…',hFilters:[['all','Всички'],['normal','Обикновени'],['postqa','Post QA'],['review','За преглед']],hSize:'На страница',hInfo:(a,b,n)=>n?`Показани ${a}–${b} от ${n}`:'',hDay:(n,t)=>`${n} ${n===1?'задача':'задачи'} · ${t}`,prev:'‹ Предишна',next:'Следваща ›',days:['Неделя','Понеделник','Вторник','Сряда','Четвъртък','Петък','Събота'],
 reasons:{'next-task':'мина към следваща задача','left-task':'напусна задачата','tab-closed':'затворен таб','tab-conflict':'отворена в друг таб'},
 noFinish:'без Finish / Clear Samples',gaps:n=>`${n} прекъсвания`,
 confirm:'Потвърди',exclude:'Изключи',status_:{active:'Активна',completed:'Завършена',review:'За преглед',excluded:'Изключена'},corrected:'ръчно',
@@ -25,7 +25,7 @@ otYes:'overtime confirmed',otNo:'overtime not confirmed',
 presets:[['today','Today'],['week','7 days'],['month','This month']],from:'From',to:'To',csv:'Download CSV',heads:['Type','Count','Fastest','Slowest','Average','Total'],total:'Total',
 statsNote:'Only completed tasks count, by completion date. Time is h:mm:ss.',
 reviewNote:'TaskTime is not sure these tasks finished normally. Confirm them to include them in statistics, or exclude them.',
-search:'Search by type, league or ID…',
+search:'Search by type, league or ID…',hFilters:[['all','All'],['normal','Regular'],['postqa','Post QA'],['review','To review']],hSize:'Per page',hInfo:(a,b,n)=>n?`Showing ${a}–${b} of ${n}`:'',hDay:(n,t)=>`${n} ${n===1?'task':'tasks'} · ${t}`,prev:'‹ Previous',next:'Next ›',days:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
 reasons:{'next-task':'moved to next task','left-task':'left the task','tab-closed':'tab closed','tab-conflict':'opened in another tab'},
 noFinish:'no Finish / Clear Samples',gaps:n=>`${n} interruptions`,
 confirm:'Confirm',exclude:'Exclude',status_:{active:'Active',completed:'Completed',review:'To review',excluded:'Excluded'},corrected:'manual',
@@ -93,7 +93,22 @@ function drawStats(){const w=W[lang];$('presets').replaceChildren(...w.presets.m
 
 function drawShifts(){const w=W[lang];const list=[...state.shifts].reverse();$('shifts').replaceChildren(...(list.length?list.map(sh=>el('div',{class:'card shift'},el('div',{class:'head'},el('h3',{textContent:`${dt(sh.start)} → ${sh.end?hm(sh.end):w.open}`}),el('small',{textContent:sh.planned?(sh.overtime?w.otYes:(sh.endChoice?w.otNo:'')):''})),shiftFacts(sh))):[empty()]))}
 function drawReview(){const w=W[lang];$('reviewNote').textContent=w.reviewNote;const r=state.tasks.filter(t=>t.status==='review').slice(-200).reverse();$('review').replaceChildren(...(r.length?r.map(t=>taskItem(t,true)):[empty()]))}
-function drawHistory(){const w=W[lang];$('search').placeholder=w.search;const q=$('search').value.trim().toLowerCase();const list=state.tasks.slice().reverse().filter(t=>!q||[t.type,t.league,t.id].some(x=>String(x||'').toLowerCase().includes(q))).slice(0,200);$('history').replaceChildren(...(list.length?list.map(t=>taskItem(t)):[empty()]))}
+const pref=(k,d)=>{try{return localStorage.getItem(k)||d}catch{return d}};const setPref=(k,v)=>{try{localStorage.setItem(k,v)}catch{}};
+let hFilter=pref('tt-hfilter','all'),hSize=Number(pref('tt-hsize','25'))||25,hPage=1;
+function drawHistory(){const w=W[lang];$('search').placeholder=w.search;const q=$('search').value.trim().toLowerCase();
+ $('hFilter').replaceChildren(...w.hFilters.map(([k,l])=>el('button',{class:k===hFilter?'on':'',textContent:l,onclick:()=>{hFilter=k;hPage=1;setPref('tt-hfilter',k);drawHistory()}})));
+ $('hSize').dataset.label=w.hSize;$('hSize').replaceChildren(...[25,50,100].map(n=>el('button',{class:n===hSize?'on':'',textContent:n,onclick:()=>{hSize=n;hPage=1;setPref('tt-hsize',String(n));drawHistory()}})));
+ const keep={all:()=>true,normal:t=>!t.postQa,postqa:t=>!!t.postQa,review:t=>t.status==='review'}[hFilter]||(()=>true);
+ const list=state.tasks.slice().reverse().filter(keep).filter(t=>!q||[t.type,t.league,t.id,t.postQa?'post qa':''].some(x=>String(x||'').toLowerCase().includes(q)));
+ const pages=Math.max(1,Math.ceil(list.length/hSize));hPage=Math.min(Math.max(1,hPage),pages);const from=(hPage-1)*hSize,page=list.slice(from,from+hSize);
+ $('hInfo').textContent=w.hInfo(from+1,from+page.length,list.length);
+ // Day totals use every filtered task of that day, not only the ones on this page.
+ const dayTot={};for(const t of list){const k=TaskTime.dateKey(t.start);const d=dayTot[k]||(dayTot[k]={n:0,ms:0});d.n++;d.ms+=t.observedMs||0}
+ const out=[];let cur='';for(const t of page){const k=TaskTime.dateKey(t.start);if(k!==cur){cur=k;const d=new Date(t.start);out.push(el('div',{class:'dayhead'},el('b',{textContent:`${w.days[d.getDay()]}, ${d.toLocaleDateString(loc(),{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\s*г\.$/,'')}`}),el('span',{textContent:w.hDay(dayTot[k].n,short(dayTot[k].ms))})))}out.push(taskItem(t))}
+ $('history').replaceChildren(...(out.length?[el('div',{class:'list'},...out)]:[empty()]));
+ const go=n=>{hPage=n;drawHistory();$('history').scrollIntoView({block:'start',behavior:'smooth'})};
+ const nums=[];for(let i=1;i<=pages;i++)if(i===1||i===pages||Math.abs(i-hPage)<=1)nums.push(i);else if(nums.at(-1)!=='…')nums.push('…');
+ $('hPager').replaceChildren(...(pages>1?[el('button',{textContent:w.prev,disabled:hPage===1,onclick:()=>go(hPage-1)}),...nums.map(n=>n==='…'?el('span',{class:'gap',textContent:'…'}):el('button',{class:n===hPage?'on':'',textContent:n,onclick:()=>go(n)})),el('button',{textContent:w.next,disabled:hPage===pages,onclick:()=>go(hPage+1)})]:[]))}
 
 function drawSettings(){const w=W[lang],a=TaskTime.alertSettings(state);for(const id of ['alertTitle','alertNote','dataTitle','dataNote','backup','restore'])$(id).textContent=w[id];$('alertSoundLabel').textContent=w.alertSound;$('alertVolumeLabel').textContent=w.alertVolume;$('alertTest').textContent=w.alertTest;$('alertNotifyLabel').textContent=w.alertNotify;
  drawConfig();$('verTitle').textContent=w.verTitle;$('verNote').textContent=w.verNote(chrome.runtime.getManifest().version);$('verCheck').textContent=w.verCheck;$('notifyTip').textContent=w.notifyTip;$('verHowTitle').textContent=w.verHow;$('verSteps').innerHTML=w.verSteps.map(x=>`<li>${x}</li>`).join('');$('openExt').textContent=w.openExt;$('folderTitle').textContent=w.folderTitle;$('folderNote').textContent=w.folderNote;$('folderInput').placeholder=w.folderPh;$('folderSave').textContent=w.folderSave;$('folderSteps').innerHTML=w.folderSteps.map(x=>`<li>${x}</li>`).join('');drawFolder();$('alertSound').checked=a.sound;$('alertVolume').value=a.volume;volFill();$('alertVolume').disabled=!a.sound;$('alertNotify').checked=a.notify}
@@ -114,7 +129,7 @@ try{const t=localStorage.getItem('tt-tab');if(TABS.includes(t))tab=t}catch{}
 $('from').value=$('to').value=today();$('from').onchange=$('to').onchange=()=>{preset='';drawStats()};
 document.querySelectorAll('#lang button').forEach(b=>b.onclick=()=>{if(b.dataset.lang!==lang)mutate({kind:'language',lang:b.dataset.lang})});
 const volFill=()=>{const v=$('alertVolume');v.style.setProperty('--p',(v.value*100)+'%');$('alertVolumeOut').textContent=Math.round(v.value*100)+'%'};$('alertVolume').addEventListener('input',volFill);
-$('search').oninput=drawHistory;
+$('search').oninput=()=>{hPage=1;drawHistory()};
 $('csv').onclick=()=>{if(!validRange())return message(W[lang].invalid);const rows=[['type','count','fastest_seconds','slowest_seconds','average_seconds','total_seconds','from','to','timezone'],...TaskTime.stats(state,$('from').value,$('to').value).map(r=>[r.type,r.count,r.min==null?'':r.min/1000,r.max==null?'':r.max/1000,r.avg==null?'':r.avg/1000,r.total/1000,$('from').value,$('to').value,Intl.DateTimeFormat().resolvedOptions().timeZone])];download(`TaskTime-${$('from').value}-${$('to').value}.csv`,'﻿'+rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\r\n'),'text/csv;charset=utf-8')};
 $('backup').onclick=()=>download(`TaskTime-backup-${today()}.json`,JSON.stringify(state,null,2),'application/json');
 let folder='';chrome.storage.local.get('tasktimeFolder').then(r=>{folder=r.tasktimeFolder||'';if(tab==='settings')drawFolder()}).catch(()=>{});
