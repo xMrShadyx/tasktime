@@ -1,5 +1,5 @@
 importScripts('core.js');
-const BUILD='0.1.8'; // replaced by scripts/package-extension.py; tells the report which background code is really running
+const BUILD='0.1.9'; // replaced by scripts/package-extension.py; tells the report which background code is really running
 let queue=Promise.resolve();
 const read=async()=> (await chrome.storage.local.get('tasktime')).tasktime||TaskTime.fresh();
 async function badge(s){
@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
   if(!sender.tab||sender.frameId!==0)return {error:'Unsupported request'};
   const url=new URL(sender.url);const e={at:Date.now(),tab:sender.tab.id};
   if(url.hostname==='redstone.secondspectrum.com'){
-   if(m.kind==='task-observe'){const before=(await read()).active;const s=await apply({...e,kind:m.kind,url:sender.url,visible:!!m.visible});if(s.active&&s.active!==before)newTaskAlert(sender.tab,s).catch(console.error);return s}
+   if(m.kind==='task-observe'){const before=(await read()).active;let pageUrl=sender.url;try{const u=new URL(String(m.url||''));if(u.origin===url.origin)pageUrl=u.href}catch{}const s=await apply({...e,kind:m.kind,url:pageUrl,visible:!!m.visible});if(s.active&&s.active!==before)newTaskAlert(sender.tab,s).catch(console.error);return s}
    if(m.kind==='alert-beep'){const cfg=TaskTime.alertSettings(await read());if(cfg.sound)await beep(cfg.volume,sender.tab.id);return {ok:true}}
    if(m.kind==='alert-clear'){chrome.notifications?.clear('tasktime-new-task');return {ok:true}}
    if(['finish','task-error'].includes(m.kind))return apply({...e,kind:m.kind,finishKind:m.finishKind==='next'?'next':'exit'});
