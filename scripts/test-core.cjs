@@ -20,3 +20,10 @@ s=C.fresh();s.custom={types:['shot'],pages:['lobby'],leagues:['xyz']};s.remote={
 test('Post QA flag and separate statistics row',()=>{let s=C.fresh();event(s,'task-observe',0,{url:url('a'),tab:1});event(s,'post-qa',1000,{tab:1});event(s,'finish',20000,{tab:1});event(s,'task-observe',21000,{url:url('b'),tab:1});event(s,'finish',31000,{tab:1});event(s,'task-observe',32000,{url:url('c'),tab:1});
 assert.equal(s.tasks[0].postQa,true);assert.ok(!s.tasks[1].postQa);const r=C.stats(s,C.dateKey(start),C.dateKey(start));assert.equal(r.find(x=>x.type==='ball').count,1);assert.equal(r.find(x=>x.type==='ball · Post QA').count,1);assert.ok(!r.some(x=>x.type==='reid · Post QA'))});
 test('Tips settings default on and accept off',()=>{assert.deepEqual(C.tipsSettings({}),{postQaChunks:true});assert.deepEqual(C.tipsSettings({tips:{postQaChunks:false}}),{postQaChunks:false})});
+test('Edit shift: planned end, breaks rebuild intervals, validation and delete',()=>{let s=C.fresh();event(s,'clock',0,{value:'in'});const id=s.shift;event(s,'clock',3600e3,{value:'out'});const p=s.prompts.find(p=>p.kind==='clock-out');event(s,'answer',3601e3,{id:p.id,value:'finish'});
+const H=3600e3,sh=()=>s.shifts[0];C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{start:start,end:start+4*H,planned:start+3*H,breaks:[{start:start+H,end:start+H+30*60e3}],overtime:true}});
+assert.equal(sh().planned,start+3*H);assert.deepEqual(sh().intervals,[{start:start,end:start+H},{start:start+H+30*60e3,end:start+4*H}]);assert.equal(sh().edited,true);assert.equal(sh().overtime,true);assert.equal(s.audit.at(-1).kind,'shift-edit');
+assert.throws(()=>C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{end:start-1}}),/bad-end/);
+assert.throws(()=>C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{breaks:[{start:start+H,end:start+2*H},{start:start+1.5*H,end:start+3*H}]}}),/break-overlap/);
+assert.throws(()=>C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{end:null}}),/end-required/);
+C.reduce(s,{kind:'delete-shift',id,at:start+6*H});assert.equal(s.shifts.length,0)});

@@ -24,6 +24,8 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
   if(m.kind==='check-update'&&ownPage)return checkUpdate(true);
   if(m.kind==='alert-settings'&&ownPage){const s=await read();s.alert=TaskTime.alertSettings({alert:m.alert});await chrome.storage.local.set({tasktime:s});return s.alert}
   if(m.kind==='test-sound'&&ownPage){await beep(TaskTime.alertSettings(await read()).volume,sender.tab?.id);return {ok:true}}
+  if(m.kind==='edit-shift'&&ownPage)return apply({kind:m.kind,id:String(m.id),changes:m.changes,at:Date.now()});
+  if(m.kind==='delete-shift'&&ownPage)return apply({kind:m.kind,id:String(m.id),at:Date.now()});
   if(m.kind==='correct-task'&&ownPage)return apply({kind:m.kind,key:m.key,status:m.status,at:Date.now()});
   if(!sender.tab||sender.frameId!==0)return {error:'Unsupported request'};
   const url=new URL(sender.url);const e={at:Date.now(),tab:sender.tab.id};

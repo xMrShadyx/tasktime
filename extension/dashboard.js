@@ -3,7 +3,7 @@ const W={bg:{tabs:{today:'Днес',stats:'Статистика',shifts:'Сме�
 status:{in:'На смяна',break:'В почивка',out:'Извън смяна'},
 kpi:['Завършени задачи','Време в задачи','Средно на задача','Работено време'],
 todayTypes:'Задачи днес по тип',shiftNow:'Текуща смяна',recent:'Последни задачи',noShift:'В момента не си на смяна.',
-started:'Начало',planned:'Планиран край',worked:'Работено',breaks:'Почивки',overtime:'След планирания край',ended:'Край',open:'продължава',
+edit:'Редактирай',edited:'ръчно редактирана',eStart:'Начало',eEnd:'Край',eEndHint:'празно = продължава',ePlanned:'Планиран край',eBreaks:'Почивки',eBreakAdd:'+ Почивка',eFrom:'от',eTo:'до',eOt:'Overtime е потвърден',eSave:'Запази',eCancel:'Откажи',eDelete:'Изтрий смяната',eDeleteAsk:'Сигурен ли си, че искаш да изтриеш тази смяна? Задачите остават.',eErr:{'bad-start':'Въведи начало.','bad-end':'Краят трябва да е след началото.','end-required':'Само текущата смяна може да е без край.','bad-planned':'Планираният край трябва да е след началото.','bad-break':'Почивките трябва да са в рамките на смяната и краят им след началото им.','break-overlap':'Почивките не трябва да се застъпват.'},started:'Начало',planned:'Планиран край',worked:'Работено',breaks:'Почивки',overtime:'След планирания край',ended:'Край',open:'продължава',
 otYes:'overtime потвърден',otNo:'overtime не е потвърден',
 presets:[['today','Днес'],['week','7 дни'],['month','Този месец']],from:'От',to:'До',csv:'Свали CSV',heads:['Тип','Брой','Най-бърза','Най-бавна','Средно','Общо'],total:'Общо',
 statsNote:'Броят се само завършените задачи, по датата на завършване. Времето е ч:мм:сс.',
@@ -20,7 +20,7 @@ en:{tabs:{today:'Today',stats:'Statistics',shifts:'Shifts',review:'To review',hi
 status:{in:'On shift',break:'On a break',out:'Off shift'},
 kpi:['Completed tasks','Time in tasks','Average per task','Time worked'],
 todayTypes:'Today’s tasks by type',shiftNow:'Current shift',recent:'Recent tasks',noShift:'You are not on shift right now.',
-started:'Start',planned:'Planned end',worked:'Worked',breaks:'Breaks',overtime:'After planned end',ended:'End',open:'ongoing',
+edit:'Edit',edited:'edited manually',eStart:'Start',eEnd:'End',eEndHint:'empty = ongoing',ePlanned:'Planned end',eBreaks:'Breaks',eBreakAdd:'+ Break',eFrom:'from',eTo:'to',eOt:'Overtime confirmed',eSave:'Save',eCancel:'Cancel',eDelete:'Delete shift',eDeleteAsk:'Are you sure you want to delete this shift? Tasks are kept.',eErr:{'bad-start':'Enter a start.','bad-end':'The end must be after the start.','end-required':'Only the current shift can have no end.','bad-planned':'The planned end must be after the start.','bad-break':'Breaks must be within the shift and end after they start.','break-overlap':'Breaks must not overlap.'},started:'Start',planned:'Planned end',worked:'Worked',breaks:'Breaks',overtime:'After planned end',ended:'End',open:'ongoing',
 otYes:'overtime confirmed',otNo:'overtime not confirmed',
 presets:[['today','Today'],['week','7 days'],['month','This month']],from:'From',to:'To',csv:'Download CSV',heads:['Type','Count','Fastest','Slowest','Average','Total'],total:'Total',
 statsNote:'Only completed tasks count, by completion date. Time is h:mm:ss.',
@@ -91,7 +91,20 @@ function drawStats(){const w=W[lang];$('presets').replaceChildren(...w.presets.m
  $('rows').replaceChildren(...rows.map(r=>el('tr',{class:r.count?'':'zero'},...[r.type,r.count,fmt(r.min),fmt(r.max),fmt(r.avg),fmt(r.total)].map(x=>el('td',{textContent:x})))));
  const n=rows.reduce((a,r)=>a+r.count,0),tot=rows.reduce((a,r)=>a+r.total,0);$('foot').replaceChildren(el('tr',{},...[w.total,n,'','',n?fmt(tot/n):'—',fmt(tot)].map(x=>el('td',{textContent:x}))))}
 
-function drawShifts(){const w=W[lang];const list=[...state.shifts].reverse();$('shifts').replaceChildren(...(list.length?list.map(sh=>el('div',{class:'card shift'},el('div',{class:'head'},el('h3',{textContent:`${dt(sh.start)} → ${sh.end?hm(sh.end):w.open}`}),el('small',{textContent:sh.planned?(sh.overtime?w.otYes:(sh.endChoice?w.otNo:'')):''})),shiftFacts(sh))):[empty()]))}
+let editingShift=null;
+const toInput=ms=>{if(!ms)return '';const d=new Date(ms),z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`};
+const fromInput=v=>v?new Date(v).getTime():null;
+function shiftForm(sh){const w=W[lang];const current=state.shift===sh.id;const inp=(v)=>el('input',{type:'datetime-local',value:toInput(v)});
+ const start=inp(sh.start),end=inp(sh.end),planned=inp(sh.planned),ot=el('input',{type:'checkbox',class:'switch',checked:!!sh.overtime});const err=el('p',{class:'ferr'});
+ const brList=el('div',{class:'brlist'});const addBr=(b={})=>{const f=inp(b.start),t=inp(b.end);const row=el('div',{class:'brrow'},el('span',{textContent:w.eFrom}),f,el('span',{textContent:w.eTo}),t,el('button',{class:'ghost',textContent:'×',onclick:()=>row.remove()}));row._get=()=>({start:fromInput(f.value),end:fromInput(t.value)});brList.append(row)};sh.breaks.forEach(addBr);
+ const field=(l,i,h)=>el('label',{class:'ff'},el('span',{textContent:l}),i,h?el('small',{textContent:h}):null);
+ const save=async()=>{err.textContent='';const changes={start:fromInput(start.value),end:fromInput(end.value),planned:fromInput(planned.value),overtime:ot.checked,breaks:[...brList.children].map(r=>r._get())};
+  try{await request({kind:'edit-shift',id:sh.id,changes});editingShift=null;await load();message(w.saved)}catch(e){err.textContent=w.eErr[e.message]||e.message}};
+ return el('div',{class:'sform'},el('div',{class:'fgrid'},field(w.eStart,start),field(w.eEnd,end,current?w.eEndHint:null),field(w.ePlanned,planned)),
+  el('div',{class:'ff'},el('span',{textContent:w.eBreaks}),brList,el('button',{class:'ghost small',textContent:w.eBreakAdd,onclick:()=>addBr({start:Date.now(),end:Date.now()})})),
+  el('label',{class:'row'},el('span',{textContent:w.eOt}),ot),err,
+  el('div',{class:'btns'},el('button',{textContent:w.eSave,onclick:save}),el('button',{class:'ghost',textContent:w.eCancel,onclick:()=>{editingShift=null;drawShifts()}}),el('button',{class:'danger',style:'margin-left:auto',textContent:w.eDelete,onclick:async()=>{if(!confirm(w.eDeleteAsk))return;try{await request({kind:'delete-shift',id:sh.id});editingShift=null;await load()}catch(e){err.textContent=e.message}}})))}
+function drawShifts(){const w=W[lang];const list=[...state.shifts].reverse();$('shifts').replaceChildren(...(list.length?list.map(sh=>el('div',{class:'card shift'},el('div',{class:'head'},el('h3',{},`${dt(sh.start)} → ${sh.end?hm(sh.end):w.open}`,sh.edited?el('span',{class:'chip',style:'margin-left:8px',textContent:w.edited}):null),el('small',{textContent:sh.planned?(sh.overtime?w.otYes:(sh.endChoice?w.otNo:'')):''}),editingShift===sh.id?null:el('button',{class:'ghost small',textContent:w.edit,onclick:()=>{editingShift=sh.id;drawShifts()}})),editingShift===sh.id?shiftForm(sh):shiftFacts(sh))):[empty()]))}
 function drawReview(){const w=W[lang];$('reviewNote').textContent=w.reviewNote;const r=state.tasks.filter(t=>t.status==='review').slice(-200).reverse();$('review').replaceChildren(...(r.length?r.map(t=>taskItem(t,true)):[empty()]))}
 const pref=(k,d)=>{try{return localStorage.getItem(k)||d}catch{return d}};const setPref=(k,v)=>{try{localStorage.setItem(k,v)}catch{}};
 let hFilter=pref('tt-hfilter','all'),hSize=Number(pref('tt-hsize','25'))||25,hPage=1;
@@ -151,6 +164,6 @@ $('restore').onclick=()=>$('restoreFile').click();
 $('restoreFile').onchange=async()=>{const f=$('restoreFile').files[0];$('restoreFile').value='';if(!f)return;const w=W[lang];let data;try{data=JSON.parse(await f.text())}catch{return message(w.badBackup)}if(!confirm(w.restoreAsk))return;try{const r=await request({kind:'restore',data});await load();message(w.restored(r.tasks,r.shifts))}catch(e){message(e.message==='invalid-backup'?w.badBackup:e.message)}};
 $('alertSound').onchange=()=>saveAlert({sound:$('alertSound').checked});$('alertVolume').onchange=()=>saveAlert({volume:Number($('alertVolume').value)});$('alertTest').onclick=()=>request({kind:'test-sound'}).catch(e=>message(e.message));
 $('alertNotify').onchange=async()=>{const on=$('alertNotify').checked;if(on){let ok=false;try{ok=await chrome.permissions.request({permissions:['notifications']})}catch{}if(!ok){$('alertNotify').checked=false;return message(W[lang].alertDenied)}}else chrome.permissions.remove({permissions:['notifications']}).catch(()=>{});saveAlert({notify:on})};
-chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes.tasktime){state=changes.tasktime.newValue;lang=state.lang||'bg';if(document.activeElement?.id==='search')return drawChrome();draw()}});
+chrome.storage.onChanged.addListener((changes,area)=>{if(area==='local'&&changes.tasktime){state=changes.tasktime.newValue;lang=state.lang||'bg';if(document.activeElement?.id==='search'||(tab==='shifts'&&editingShift))return drawChrome();draw()}});
 setInterval(()=>{if(state&&tab==='today')drawToday()},30000);
 load().catch(e=>message(e.message));

@@ -47,6 +47,17 @@ function answer(s,id,value,now){const p=s.prompts.find(x=>x.id===id);if(!p)throw
  }else if(p.kind==='reminder'){if(s.clock==='in')throw Error('Clock Out in Ximble first')}
  s.audit.push({at:now,kind:'answer',question:p.kind,eventAt:p.at,value});s.prompts=s.prompts.filter(x=>x.id!==id);
 }
+/* Manual shift correction. Working intervals are rebuilt as [start, end] minus the breaks, so totals stay consistent. */
+function editShift(s,id,c,now){const sh=s.shifts.find(x=>x.id===id);if(!sh)throw Error('Shift missing');
+ const num=v=>v===null||v===''||v===undefined?null:Number(v);const start=num(c.start)??sh.start,end=c.end===undefined?sh.end:num(c.end),planned=c.planned===undefined?sh.planned:num(c.planned);
+ const current=s.shift===sh.id;if(!Number.isFinite(start))throw Error('bad-start');if(end!==null&&!(end>start))throw Error('bad-end');if(end===null&&!current)throw Error('end-required');if(planned!==null&&!(planned>start))throw Error('bad-planned');
+ const limit=end??now;const breaks=(c.breaks===undefined?sh.breaks:c.breaks).map(b=>({start:num(b.start),end:num(b.end)})).sort((a,b)=>a.start-b.start);
+ breaks.forEach((b,i)=>{if(!Number.isFinite(b.start)||b.start<start||b.start>limit)throw Error('bad-break');if(b.end!==null&&(!(b.end>b.start)||b.end>limit))throw Error('bad-break');if(b.end===null&&(i<breaks.length-1||end!==null))throw Error('bad-break');if(i&&breaks[i-1].end>b.start)throw Error('break-overlap')});
+ s.audit.push({at:now,kind:'shift-edit',previous:JSON.parse(JSON.stringify(sh))});
+ const iv=[];let cur=start;for(const b of breaks){if(b.start>cur)iv.push({start:cur,end:b.start});cur=b.end??null;if(cur===null)break}if(cur!==null&&(end===null||end>cur))iv.push({start:cur,end});
+ Object.assign(sh,{start,end,planned,breaks,intervals:iv,edited:true});if(typeof c.overtime==='boolean')sh.overtime=c.overtime;
+ if(end!==null&&current){s.shift=null;s.prompts=s.prompts.filter(p=>p.shift!==sh.id)}
+ if(planned!==null&&planned>now)s.prompts=s.prompts.filter(p=>!(p.shift===sh.id&&p.kind==='overtime'));if(planned!==sh.planned||c.planned!==undefined)s.prompts=s.prompts.filter(p=>!(p.shift===sh.id&&p.kind==='plan'))}
 function reduce(s,e){const now=e.at;
  if(e.kind==='task-observe'){
   const info=taskFromURL(e.url,extraOf(s));s.health.taskSeen=now;if(info?.rawType){s.unknown||={};s.unknown[info.rawType]=Date.now()}let t=taskNow(s);
@@ -61,6 +72,8 @@ function reduce(s,e){const now=e.at;
  if(e.kind==='tab-closed'){const t=taskNow(s);if(t?.owner===e.tab)endTask(s,now,'tab-closed')}
  if(e.kind==='clock')clock(s,e.value,now);
  if(e.kind==='answer')answer(s,e.id,e.value,now);
+ if(e.kind==='edit-shift')editShift(s,e.id,e.changes||{},now);
+ if(e.kind==='delete-shift'){const sh=s.shifts.find(x=>x.id===e.id);if(!sh)throw Error('Shift missing');s.audit.push({at:now,kind:'shift-delete',previous:JSON.parse(JSON.stringify(sh))});s.shifts=s.shifts.filter(x=>x!==sh);s.prompts=s.prompts.filter(p=>p.shift!==sh.id);if(s.shift===sh.id)s.shift=null}
  if(e.kind==='correct-task'){const t=s.tasks.find(x=>x.key===e.key);if(!t||t.status==='active')throw Error('Task is active or missing');if(!['completed','excluded'].includes(e.status))throw Error('Invalid status');s.audit.push({at:now,kind:'correction',key:t.key,previous:t.status,status:e.status});t.status=e.status;t.corrected=true;}
  const sh=currentShift(s);if(sh?.planned&&now>=sh.planned&&s.clock==='in'&&!sh.endChoice)prompt(s,'overtime',{shift:sh.id,at:sh.planned});
  if(s.clock==='out')s.prompts=s.prompts.filter(p=>p.kind!=='reminder');
@@ -75,5 +88,5 @@ const ALERT={sound:true,volume:0.6,notify:false};
 function alertSettings(s){const a={...ALERT,...(s.alert||{})};return {sound:!!a.sound,volume:Math.max(0,Math.min(1,Number(a.volume)||0)),notify:!!a.notify}}
 const TIPS={postQaChunks:true};
 function tipsSettings(s){const t={...TIPS,...(s?.tips||{})};return {postQaChunks:!!t.postQaChunks}}
-const api={alertSettings,tipsSettings,TYPES,LEAGUES,PAGES,extraOf,cleanList,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;
+const api={editShift,alertSettings,tipsSettings,TYPES,LEAGUES,PAGES,extraOf,cleanList,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;
 })(globalThis);
