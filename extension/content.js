@@ -72,4 +72,26 @@ if(isTasks){
   const row=tips.postQaChunks&&isPostQa()&&chunkRow();if(!row){clear();return}if(!style.isConnected)document.head.append(style);
   for(const c of row){const num=c.textContent.trim(),t=target(c);if(t!==c)c.removeAttribute('data-tasktime-chunk');if(!hasTask(c))t.removeAttribute('data-tasktime-chunk');else t.setAttribute('data-tasktime-chunk',visited.has(num)?'done':'todo')}},700);
 }
+
+/* Ximble "My Schedule" (month view): read confirmed shifts (brown boxes with a time range).
+   Grey boxes are skipped: either "Time off" or not yet confirmed. Only reads the page, never clicks. */
+if(location.hostname==='app.ximble.com'){
+ const MONTHS=['january','february','march','april','may','june','july','august','september','october','november','december'];let lastSig='';
+ const z=n=>String(n).padStart(2,'0');const key=(y,m,d)=>{const t=new Date(y,m,d);return `${t.getFullYear()}-${z(t.getMonth()+1)}-${z(t.getDate())}`};
+ const ownText=e=>[...e.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('').trim();
+ const isGrey=c=>{const m=String(c).match(/[\d.]+/g);if(!m)return true;const [r,g,b,a]=m.map(Number);if(a!==undefined&&a<.1)return true;return Math.max(r,g,b)-Math.min(r,g,b)<18};
+ function boxOf(e){for(let x=e;x&&x!==document.body;x=x.parentElement){const bg=getComputedStyle(x).backgroundColor;const m=String(bg).match(/[\d.]+/g);if(m&&!(m[3]!==undefined&&+m[3]<.1)&&!(+m[0]>245&&+m[1]>245&&+m[2]>245))return x}return null}
+ function readMonth(){if(!/^\/myschedule/i.test(location.pathname))return null;
+  let ym=null;for(const e of document.querySelectorAll('h1,h2,h3,h4,div,span')){const t=ownText(e);const m=t.match(/^([A-Za-z]+)\s+(\d{4})$/);if(m&&MONTHS.includes(m[1].toLowerCase())&&visible(e)){ym={y:+m[2],m:MONTHS.indexOf(m[1].toLowerCase())};break}}if(!ym)return null;
+  const labels=[...document.querySelectorAll('body *')].filter(e=>/^\d{1,2}$/.test(ownText(e))&&e.children.length===0&&visible(e)).map(e=>({e,n:+ownText(e),r:e.getBoundingClientRect()})).filter(l=>l.n>=1&&l.n<=31);
+  if(labels.length<28)return null;labels.sort((a,b)=>a.r.top-b.r.top||a.r.left-b.r.left);
+  let month=ym.m-1,prev=0;for(const l of labels){if(month===ym.m-1&&l.n<prev)month=ym.m;else if(month===ym.m-1&&l.n<=7&&prev===0)month=ym.m;else if(month===ym.m&&l.n<prev)month=ym.m+1;l.date=key(ym.y,month,l.n);prev=l.n}
+  const cols=[...new Set(labels.map(l=>Math.round(l.r.left)))].sort((a,b)=>a-b);
+  const shifts=[];for(const e of document.querySelectorAll('body *')){const t=ownText(e);const m=t.match(/^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/);if(!m||!visible(e))continue;
+   const box=boxOf(e);if(!box||/time\s*off/i.test(box.textContent)||isGrey(getComputedStyle(box).backgroundColor))continue;
+   const r=e.getBoundingClientRect();const cx=r.left+2;const col=cols.filter(c=>c<=cx+4).pop();if(col===undefined)continue;
+   const lab=labels.filter(l=>Math.round(l.r.left)===col&&l.r.top<=r.top+2).pop();if(!lab)continue;const hm=x=>x.padStart(5,'0');shifts.push({date:lab.date,start:hm(m[1]),end:hm(m[2])})}
+  return {visible:labels.map(l=>l.date),shifts}}
+ setInterval(()=>{if(stopped)return;const r=readMonth();if(!r)return;const sig=JSON.stringify(r);if(sig===lastSig)return;lastSig=sig;send({kind:'ximble-schedule',visible:r.visible,shifts:r.shifts})},3000);
+}
 })();

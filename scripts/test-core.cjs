@@ -35,3 +35,8 @@ const c=C.compareShift(s,s.shifts[0]);assert.equal(c.startDiff,4*60e3);assert.eq
 s.schedule=C.cleanSchedule({weekly:{[wd]:{start:'20:00',end:'02:00'}},days:{[day]:{off:true}}});assert.equal(C.planForDate(s,day),null);
 assert.deepEqual(C.cleanSchedule({weekly:{'1':{start:'25:00',end:'10:00'}}}).weekly,{});
 let m=C.fresh();m.schedule=C.cleanSchedule({days:{[day]:{start:'10:00',end:'18:00'}}});const d=new Date(start);d.setHours(23,0,0,0);assert.equal(C.missedPlans(m,1,+d).length,1)});
+test('Ximble merge: several shifts per day, day off for empty days, manual wins',()=>{let s=C.fresh();s.schedule=C.cleanSchedule({days:{'2026-11-20':{start:'09:00',end:'17:00',source:'manual'}}});
+const n=C.mergeXimble(s,['2026-11-19','2026-11-20','2026-11-21'],[{date:'2026-11-19',start:'11:00',end:'14:30'},{date:'2026-11-19',start:'18:00',end:'23:00'},{date:'2026-11-20',start:'08:00',end:'12:00'}],Date.now());
+assert.equal(C.plansForDate(s,'2026-11-19').length,2);assert.equal(s.schedule.days['2026-11-21'].off,true);assert.equal(s.schedule.days['2026-11-20'].source,'manual');assert.equal(n,2);
+s.schedule=C.cleanSchedule(s.schedule);assert.equal(C.plansForDate(s,'2026-11-19').length,2);
+C.mergeXimble(s,['2026-11-06'],[{date:'2026-11-06',start:'20:50',end:'00:00'}],Date.now());const p=C.planForDate(s,'2026-11-06');assert.equal(p.end-p.start,(3*60+10)*60e3)});
