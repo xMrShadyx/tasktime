@@ -46,28 +46,21 @@ if(isTasks){
  setInterval(step,500);window.addEventListener('focus',step);
 }
 
-/* Post QA checklist: remind to open the neighbouring chunks. Only reminds — never blocks the page.
-   The row looks like [962] [Jump to chunk for task: 963] [964]; a neighbour counts only if it is enabled ("lit"). */
+/* Post QA reminder: a coloured line under each neighbouring chunk button that has a task.
+   Orange = not opened yet, green = opened. Only reminds — never blocks the page.
+   The row looks like [962] [Jump to chunk for task: 963] [964]; a chunk without a task has light (greyed) text. */
 if(isTasks){
- const T={bg:{title:'Post QA',check:'Провери и съседните chunk-ове:',done:'Всичко е проверено ✓',task:'задача',hide:'Скрий'},en:{title:'Post QA',check:'Also check the neighbouring chunks:',done:'All checked ✓',task:'task',hide:'Hide'}};
- let url='',visited=new Set(),box=null,hidden=false,doneAt=0;
- const style=document.createElement('style');style.textContent='[data-tasktime-check]{outline:3px solid #ea8a0c!important;outline-offset:2px;border-radius:6px;animation:tasktimePulse 1.2s ease-in-out infinite}@keyframes tasktimePulse{50%{outline-color:rgba(234,138,12,.25)}}@media (prefers-reduced-motion:reduce){[data-tasktime-check]{animation:none}}';
- const enabled=el=>!el.disabled&&el.getAttribute('aria-disabled')!=='true'&&!/\bdisabled\b/i.test(el.className||'')&&parseFloat(getComputedStyle(el).opacity||'1')>=.7&&getComputedStyle(el).pointerEvents!=='none';
- function chunkRow(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){const m=n.nodeValue.match(/Jump to chunk for task:\s*(\d+)/i);if(!m)continue;let jump=n.parentElement;while(jump&&jump.parentElement&&![...jump.parentElement.children].some(c=>c!==jump&&/^\s*\d+\s*$/.test(c.textContent)))jump=jump.parentElement;if(!jump?.parentElement)return null;
-   const sib=[...jump.parentElement.children].filter(c=>c!==jump&&/^\s*\d+\s*$/.test(c.textContent)&&visible(c));return {task:m[1],chunks:sib.map(c=>({el:c,num:c.textContent.trim(),on:enabled(c)}))}}return null}
- function postQaInfo(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(n.nodeValue.trim().toLowerCase()!=='post qa'||!n.parentElement||!visible(n.parentElement))continue;const near=(n.parentElement.parentElement?.textContent||'');const r=near.match(/Task\s*\(([^)]+)\)/i);return {reason:r?r[1]:''}}return null}
- document.addEventListener('click',e=>{const b=e.target.closest?.('button,a,[role="button"],div,span');if(!b)return;const t=(b.textContent||'').trim();if(/^\d+$/.test(t))visited.add(t);if(/Jump to chunk for task/i.test(t))visited.add('task')},true);
- function panel(info,row){const w=T[pageLang]||T.bg;const need=row.chunks.filter(c=>c.on);const all=need.every(c=>visited.has(c.num));
-  for(const c of row.chunks){if(c.on&&!visited.has(c.num))c.el.setAttribute('data-tasktime-check','');else c.el.removeAttribute('data-tasktime-check')}
-  if(!style.isConnected)document.head.append(style);
-  if(all&&!doneAt)doneAt=Date.now();if(hidden||(all&&Date.now()-doneAt>4000)||!need.length){box?.remove();box=null;return}
-  if(!box){box=document.createElement('div');box.style.cssText='position:fixed;left:12px;bottom:12px;z-index:2147483646;width:260px';box.attachShadow({mode:'open'})}
-  const items=[...row.chunks.map(c=>({num:c.num,on:c.on,ok:visited.has(c.num)})),{num:row.task,on:true,ok:true,mid:true}].sort((a,b)=>a.num-b.num);
-  box.shadowRoot.innerHTML=`<style>:host{all:initial}.b{font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#0a0a0a;background:#fff;border:1px solid #e4e4e7;border-left:4px solid ${all?'#16a34a':'#ea8a0c'};border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.16);padding:12px 14px}.h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.t{background:#dc2626;color:#fff;font-weight:700;font-size:11px;border-radius:5px;padding:1px 6px}.r{font-weight:600}.x{margin-left:auto;border:0;background:none;color:#71717a;cursor:pointer;font-size:16px;line-height:1}p{margin:0 0 8px;color:#52525b;font-size:12px}.c{display:flex;gap:6px}.k{flex:1;text-align:center;border:1px solid #e4e4e7;border-radius:8px;padding:6px 0;font-weight:600;font-variant-numeric:tabular-nums}.k small{display:block;font-weight:400;font-size:10px;color:#71717a}.ok{background:#f0fdf4;border-color:#bbf7d0;color:#166534}.no{background:#fff7ed;border-color:#fdba74;color:#9a3412}.off{color:#a1a1aa;background:#fafafa}.d{color:#166534;font-weight:600}</style>
-   <div class="b"><div class="h"><span class="t">${w.title}</span><span class="r">${(info.reason||'').replace(/[<>&]/g,'')}</span><button class="x" title="${w.hide}">×</button></div>${all?`<p class="d">${w.done}</p>`:`<p>${w.check}</p>`}
-   <div class="c">${items.map(i=>`<div class="k ${i.mid?'ok':!i.on?'off':i.ok?'ok':'no'}">${i.mid?'✓':!i.on?'–':i.ok?'✓':'☐'} ${i.num}${i.mid?`<small>${w.task}</small>`:''}</div>`).join('')}</div></div>`;
-  box.shadowRoot.querySelector('.x').onclick=()=>{hidden=true;panel(info,row)};if(!box.isConnected)document.documentElement.append(box)}
- setInterval(()=>{if(stopped)return;if(location.href!==url){url=location.href;visited=new Set();hidden=false;doneAt=0;document.querySelectorAll('[data-tasktime-check]').forEach(e=>e.removeAttribute('data-tasktime-check'))}
-  const info=tips.postQaChunks&&postQaInfo(),row=info&&chunkRow();if(!info||!row){box?.remove();box=null;document.querySelectorAll('[data-tasktime-check]').forEach(e=>e.removeAttribute('data-tasktime-check'));return}panel(info,row)},700);
+ let url='',visited=new Set();
+ const style=document.createElement('style');style.textContent='[data-tasktime-chunk]{box-shadow:inset 0 -4px 0 #ea8a0c!important;transition:box-shadow .2s}[data-tasktime-chunk="done"]{box-shadow:inset 0 -4px 0 #16a34a!important}';
+ const lum=c=>{const m=String(c).match(/\d+(\.\d+)?/g);if(!m)return 0;const [r,g,b]=m.map(Number);return (0.2126*r+0.7152*g+0.0722*b)/255};
+ const hasTask=el=>!el.disabled&&el.getAttribute('aria-disabled')!=='true'&&!/\bdisabled\b/i.test(el.className||'')&&parseFloat(getComputedStyle(el).opacity||'1')>=.7&&lum(getComputedStyle(el).color)<.5;
+ function chunkRow(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(!/Jump to chunk for task:\s*\d+/i.test(n.nodeValue))continue;let jump=n.parentElement;while(jump&&jump.parentElement&&![...jump.parentElement.children].some(c=>c!==jump&&/^\s*\d+\s*$/.test(c.textContent)))jump=jump.parentElement;if(!jump?.parentElement)return null;
+   return [...jump.parentElement.children].filter(c=>c!==jump&&/^\s*\d+\s*$/.test(c.textContent)&&visible(c))}return null}
+ function isPostQa(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode()))if(n.nodeValue.trim().toLowerCase()==='post qa'&&n.parentElement&&visible(n.parentElement))return true;return false}
+ const clear=()=>document.querySelectorAll('[data-tasktime-chunk]').forEach(e=>e.removeAttribute('data-tasktime-chunk'));
+ document.addEventListener('click',e=>{const b=e.target.closest?.('button,a,[role="button"],div,span');const t=(b?.textContent||'').trim();if(/^\d+$/.test(t))visited.add(t)},true);
+ setInterval(()=>{if(stopped)return;if(location.href!==url){url=location.href;visited=new Set();clear()}
+  const row=tips.postQaChunks&&isPostQa()&&chunkRow();if(!row){clear();return}if(!style.isConnected)document.head.append(style);
+  for(const c of row){const num=c.textContent.trim();if(!hasTask(c))c.removeAttribute('data-tasktime-chunk');else c.setAttribute('data-tasktime-chunk',visited.has(num)?'done':'todo')}},700);
 }
 })();
