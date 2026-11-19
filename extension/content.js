@@ -60,6 +60,8 @@ if(isTasks){
  function contrast(btn){const w=document.createTreeWalker(btn,NodeFilter.SHOW_TEXT);let n,t=null;while((n=w.nextNode()))if(/\d/.test(n.nodeValue)){t=n.parentElement;break}if(!t)return 0;
   let op=1;for(let e=t;e&&e!==btn.parentElement;e=e.parentElement)op*=parseFloat(getComputedStyle(e).opacity||'1');
   const fg=rgba(getComputedStyle(t).color),bg=bgOf(btn),a=fg.a*op;const mix=k=>fg[k]*a+bg[k]*(1-a);return L(bg)-L({r:mix('r'),g:mix('g'),b:mix('b')})}
+ // The line goes on the element that actually paints the grey button: the innermost element around the number with a background.
+ function target(el){let best=el;const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode()))if(/\d/.test(n.nodeValue)){for(let e=n.parentElement;e&&e!==el.parentElement;e=e.parentElement){if(rgba(getComputedStyle(e).backgroundColor).a>.05){best=e;break}}break}return best}
  const hasTask=el=>!el.disabled&&el.getAttribute('aria-disabled')!=='true'&&!/\bdisabled\b/i.test(el.className||'')&&contrast(el)>.35;
  function chunkRow(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(!/Jump to chunk for task:\s*\d+/i.test(n.nodeValue))continue;let jump=n.parentElement;while(jump&&jump.parentElement&&![...jump.parentElement.children].some(c=>c!==jump&&/^\s*\d+\s*$/.test(c.textContent)))jump=jump.parentElement;if(!jump?.parentElement)return null;
    return [...jump.parentElement.children].filter(c=>c!==jump&&/^\s*\d+\s*$/.test(c.textContent)&&visible(c))}return null}
@@ -68,6 +70,6 @@ if(isTasks){
  document.addEventListener('click',e=>{const b=e.target.closest?.('button,a,[role="button"],div,span');const t=(b?.textContent||'').trim();if(/^\d+$/.test(t))visited.add(t)},true);
  setInterval(()=>{if(stopped)return;if(location.href!==url){url=location.href;visited=new Set();clear()}
   const row=tips.postQaChunks&&isPostQa()&&chunkRow();if(!row){clear();return}if(!style.isConnected)document.head.append(style);
-  for(const c of row){const num=c.textContent.trim();if(!hasTask(c))c.removeAttribute('data-tasktime-chunk');else c.setAttribute('data-tasktime-chunk',visited.has(num)?'done':'todo')}},700);
+  for(const c of row){const num=c.textContent.trim(),t=target(c);if(t!==c)c.removeAttribute('data-tasktime-chunk');if(!hasTask(c))t.removeAttribute('data-tasktime-chunk');else t.setAttribute('data-tasktime-chunk',visited.has(num)?'done':'todo')}},700);
 }
 })();
