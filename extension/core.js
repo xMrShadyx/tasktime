@@ -51,7 +51,7 @@ function answer(s,id,value,now){const p=s.prompts.find(x=>x.id===id);if(!p)throw
 function editShift(s,id,c,now){const sh=s.shifts.find(x=>x.id===id);if(!sh)throw Error('Shift missing');
  const num=v=>v===null||v===''||v===undefined?null:Number(v);const start=num(c.start)??sh.start,end=c.end===undefined?sh.end:num(c.end),planned=c.planned===undefined?sh.planned:num(c.planned);
  const current=s.shift===sh.id;if(!Number.isFinite(start))throw Error('bad-start');if(end!==null&&!(end>start))throw Error('bad-end');if(end===null&&!current)throw Error('end-required');if(planned!==null&&!(planned>start))throw Error('bad-planned');
- const limit=end??now;const breaks=(c.breaks===undefined?sh.breaks:c.breaks).map(b=>({start:num(b.start),end:num(b.end)})).sort((a,b)=>a.start-b.start);
+ const limit=end??now;const breaks=(c.breaks===undefined?sh.breaks:c.breaks).map(b=>({start:num(b.start),end:num(b.end)})).filter(b=>!(b.end!==null&&b.end===b.start)).sort((a,b)=>a.start-b.start);
  breaks.forEach((b,i)=>{if(!Number.isFinite(b.start)||b.start<start||b.start>limit)throw Error('bad-break');if(b.end!==null&&(!(b.end>b.start)||b.end>limit))throw Error('bad-break');if(b.end===null&&(i<breaks.length-1||end!==null))throw Error('bad-break');if(i&&breaks[i-1].end>b.start)throw Error('break-overlap')});
  s.audit.push({at:now,kind:'shift-edit',previous:JSON.parse(JSON.stringify(sh))});
  const iv=[];let cur=start;for(const b of breaks){if(b.start>cur)iv.push({start:cur,end:b.start});cur=b.end??null;if(cur===null)break}if(cur!==null&&(end===null||end>cur))iv.push({start:cur,end});

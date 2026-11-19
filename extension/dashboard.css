@@ -98,3 +98,4 @@ h3.sub{font-size:13px;font-weight:600;margin:4px 0 6px}
 .brlist{display:grid;gap:6px}.brrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:var(--muted)}.brrow button{padding:4px 10px}
 .ferr{color:var(--red);font-size:13px;margin:0}.ferr:empty{display:none}.sform .row{border-top:0;padding:0}
 .ff>button.small{justify-self:start}
+.brrow.bad input{border-color:var(--red);box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 18%,transparent)}
