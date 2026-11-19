@@ -27,3 +27,11 @@ assert.throws(()=>C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{end:sta
 assert.throws(()=>C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{breaks:[{start:start+H,end:start+2*H},{start:start+1.5*H,end:start+3*H}]}}),/break-overlap/);
 assert.throws(()=>C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{end:null}}),/end-required/);
 C.reduce(s,{kind:'delete-shift',id,at:start+6*H});assert.equal(s.shifts.length,0)});
+test('Schedule: weekly template, day override, night shift, auto planned end and comparison',()=>{let s=C.fresh();const day=C.dateKey(start);const wd=String(new Date(start).getDay());
+s.schedule=C.cleanSchedule({weekly:{[wd]:{start:'20:00',end:'02:00'}},days:{}});const p=C.planForDate(s,day);assert.equal(new Date(p.end).getHours(),2);assert.ok(p.end-p.start===6*3600e3);
+event(s,'clock',4*60e3,{value:'in'});assert.equal(s.prompts.filter(x=>x.kind==='plan').length,0);assert.equal(s.shifts[0].planned,p.end);
+event(s,'clock',6*3600e3+30*60e3,{value:'out'});const q=s.prompts.find(x=>x.kind==='clock-out');event(s,'answer',6*3600e3+31*60e3,{id:q.id,value:'finish'});
+const c=C.compareShift(s,s.shifts[0]);assert.equal(c.startDiff,4*60e3);assert.equal(c.late,false);assert.equal(c.over,true);
+s.schedule=C.cleanSchedule({weekly:{[wd]:{start:'20:00',end:'02:00'}},days:{[day]:{off:true}}});assert.equal(C.planForDate(s,day),null);
+assert.deepEqual(C.cleanSchedule({weekly:{'1':{start:'25:00',end:'10:00'}}}).weekly,{});
+let m=C.fresh();m.schedule=C.cleanSchedule({days:{[day]:{start:'10:00',end:'18:00'}}});const d=new Date(start);d.setHours(23,0,0,0);assert.equal(C.missedPlans(m,1,+d).length,1)});
