@@ -49,8 +49,20 @@ function mergeXimble(s,visible,shifts,now,partial=[]){const sc=cleanSchedule(s.s
   let list=by[key]||[];if(partial.includes(key)&&cur?.shifts){const seen=new Set(list.map(x=>x.start+x.end));for(const x of cur.shifts)if(!seen.has(x.start+x.end))list.push(x)}
   const next=list.length?{shifts:list.sort((a,b)=>a.start.localeCompare(b.start)).slice(0,6),source:'ximble'}:{off:true,source:'ximble'};if(JSON.stringify(cur)!==JSON.stringify(next)){sc.days[key]=next;changed++}}
  s.schedule=sc;s.schedule.ximbleAt=now;return changed}
+function closeAtLastOut(s,sh,end){sh.end=end;sh.breaks=sh.breaks.filter(b=>b.end&&b.end<=end);sh.endChoice=sh.endChoice||'finish';s.prompts=s.prompts.filter(p=>p.shift!==sh.id);if(s.shift===sh.id)s.shift=null}
+/* Repair shifts recorded by older versions: a second shift that was glued to the first as a "break" after the planned end. */
+function repairShifts(s){let n=0;for(const sh of [...s.shifts]){if(!sh.planned||sh.intervals.length<2)continue;const i=sh.intervals.findIndex((iv,k)=>k>0&&iv.start>sh.planned+TOL&&sh.intervals[k-1].end&&sh.intervals[k-1].end<=sh.planned+TOL);if(i<0)continue;
+ const rest=sh.intervals.slice(i),first=sh.intervals.slice(0,i),cut=first.at(-1).end,pl=planForTime(s,rest[0].start);
+ const ns={id:uuid(),start:rest[0].start,end:sh.end,planned:pl?pl.end:null,scheduled:pl?{start:pl.start,end:pl.end}:undefined,intervals:rest,breaks:sh.breaks.filter(b=>b.start>=rest[0].start),overtime:false,inferredStart:false,repaired:true};if(!ns.scheduled)delete ns.scheduled;
+ s.audit.push({at:Date.now(),kind:'shift-split',previous:JSON.parse(JSON.stringify(sh))});
+ Object.assign(sh,{intervals:first,end:cut,breaks:sh.breaks.filter(b=>b.end&&b.end<=cut),overtime:false,endChoice:sh.endChoice||'finish'});
+ s.shifts.splice(s.shifts.indexOf(sh)+1,0,ns);if(s.shift===sh.id){s.shift=ns.id;s.prompts=s.prompts.filter(p=>p.shift!==sh.id)}n++}return n}
 function clock(s,value,now){if(!['in','out'].includes(value))return;const prev=s.clock;const sh0=currentShift(s);if(sh0&&s.health.clockSeen&&now-s.health.clockSeen>45000){(sh0.gaps||=[]).push({from:s.health.clockSeen,to:now})}s.clock=value;s.health.clockSeen=now;if(prev===value)return;
  let sh=currentShift(s);
+ if(value==='in'&&sh&&prev==='out'){
+  // Coming back after the planned end (or into a different scheduled shift) is a new shift, not a break.
+  const last=sh.intervals.at(-1),pl=planForTime(s,now);
+  if((sh.planned&&now>sh.planned+TOL)||(pl&&sh.scheduled&&pl.start!==sh.scheduled.start)){closeAtLastOut(s,sh,last?.end??now);sh=null}}
  if(value==='in'){
   if(!sh){sh={id:uuid(),start:now,end:null,planned:null,intervals:[],breaks:[],overtime:false,inferredStart:prev===null};s.shifts.push(sh);s.shift=sh.id;const pl=planForTime(s,now);if(pl){sh.planned=pl.end;sh.scheduled={start:pl.start,end:pl.end}}else prompt(s,'plan',{shift:sh.id,at:now})}
   const br=sh.breaks.at(-1);if(br&&!br.end)br.end=now;
@@ -115,5 +127,5 @@ const ALERT={sound:true,volume:0.6,notify:false};
 function alertSettings(s){const a={...ALERT,...(s.alert||{})};return {sound:!!a.sound,volume:Math.max(0,Math.min(1,Number(a.volume)||0)),notify:!!a.notify}}
 const TIPS={postQaChunks:true};
 function tipsSettings(s){const t={...TIPS,...(s?.tips||{})};return {postQaChunks:!!t.postQaChunks}}
-const api={cleanSchedule,plansForDate,mergeXimble,planForDate,planForTime,compareShift,missedPlans,editShift,alertSettings,tipsSettings,TYPES,LEAGUES,PAGES,extraOf,cleanList,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;
+const api={repairShifts,cleanSchedule,plansForDate,mergeXimble,planForDate,planForTime,compareShift,missedPlans,editShift,alertSettings,tipsSettings,TYPES,LEAGUES,PAGES,extraOf,cleanList,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;
 })(globalThis);

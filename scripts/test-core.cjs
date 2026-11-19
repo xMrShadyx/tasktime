@@ -45,3 +45,9 @@ C.mergeXimble(s,['2026-11-19'],[{date:'2026-11-19',start:'11:00',end:'14:30'},{d
 C.mergeXimble(s,['2026-11-19','2026-11-20'],[{date:'2026-11-19',start:'11:00',end:'14:30'}],Date.now(),['2026-11-19']);
 assert.equal(C.plansForDate(s,'2026-11-19').length,2);
 C.mergeXimble(s,['2026-11-19'],[{date:'2026-11-19',start:'11:00',end:'14:30'}],Date.now());assert.equal(C.plansForDate(s,'2026-11-19').length,1)});
+test('Second shift after the planned end is a new shift, not overtime; old glued data is repaired',()=>{const H=3600e3;let s=C.fresh();
+event(s,'clock',0,{value:'in'});event(s,'answer',1000,{id:s.prompts.find(p=>p.kind==='plan').id,value:'23:30'});
+event(s,'clock',3.5*H,{value:'out'});event(s,'answer',3.5*H+1000,{id:s.prompts.find(p=>p.kind==='clock-out').id,value:'break'});
+event(s,'clock',7*H,{value:'in'});assert.equal(s.shifts.length,2);assert.equal(s.shifts[0].end,start+3.5*H);assert.equal(s.shifts[0].breaks.length,0);assert.ok(!s.prompts.some(p=>p.kind==='overtime'));
+let r=C.fresh();r.shifts=[{id:'a',start:start,end:null,planned:start+3.5*H,intervals:[{start:start,end:start+3.5*H},{start:start+7*H,end:null}],breaks:[{start:start+3.5*H,end:start+7*H}],overtime:false}];r.shift='a';r.prompts=[{id:'o',kind:'overtime',shift:'a',at:start+3.5*H}];
+assert.equal(C.repairShifts(r),1);assert.equal(r.shifts.length,2);assert.equal(r.shifts[0].end,start+3.5*H);assert.equal(r.shifts[1].start,start+7*H);assert.equal(r.shift,r.shifts[1].id);assert.equal(r.prompts.length,0);assert.equal(C.repairShifts(r),0)});

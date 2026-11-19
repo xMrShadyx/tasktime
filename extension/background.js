@@ -1,5 +1,5 @@
 importScripts('core.js');
-const BUILD='0.1.23'; // replaced by scripts/package-extension.py; tells the report which background code is really running
+const BUILD='0.1.24'; // replaced by scripts/package-extension.py; tells the report which background code is really running
 let queue=Promise.resolve();
 const read=async()=> (await chrome.storage.local.get('tasktime')).tasktime||TaskTime.fresh();
 async function badge(s){
@@ -59,7 +59,7 @@ if(!force&&Date.now()-last<6*3600e3)return s.update||null;
  s.health={...(s.health||{}),updateChecked:Date.now()};const cur=chrome.runtime.getManifest().version;
  s.update=info&&newer(info.version,cur)?{version:String(info.version).slice(0,20),url:SITE+'#s0'}:null;
  await chrome.storage.local.set({tasktime:s});await badge(s);return s.update}
-async function boot(){serialized(()=>checkUpdate(false)).catch(console.error);if(!await chrome.alarms.get('tasktime-tick'))await chrome.alarms.create('tasktime-tick',{periodInMinutes:1});await badge(await read())}
+async function boot(){serialized(async()=>{const s=await read();if(TaskTime.repairShifts(s)){await chrome.storage.local.set({tasktime:s});await badge(s)}}).catch(console.error);serialized(()=>checkUpdate(false)).catch(console.error);if(!await chrome.alarms.get('tasktime-tick'))await chrome.alarms.create('tasktime-tick',{periodInMinutes:1});await badge(await read())}
 chrome.runtime.onInstalled.addListener(()=>serialized(boot).catch(console.error));chrome.runtime.onStartup.addListener(()=>serialized(boot).catch(console.error));serialized(boot).catch(console.error);
 
 /* New-task alert: chime when a new task opens while its tab is not in focus; repeat every 10 s until focused. */

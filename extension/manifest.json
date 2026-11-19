@@ -1,7 +1,7 @@
 {
  "manifest_version": 3,
  "name": "TaskTime — Personal work log (Beta)",
- "version": "0.1.23",
+ "version": "0.1.24",
  "description": "Личен отчет на задачи и смени. Тестова версия / Personal task and shift log. Beta.",
  "permissions": [
   "storage",
