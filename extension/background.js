@@ -30,6 +30,7 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
    if(m.kind==='task-observe'){const before=(await read()).active;let pageUrl=sender.url;try{const u=new URL(String(m.url||''));if(u.origin===url.origin)pageUrl=u.href}catch{}const s=await apply({...e,kind:m.kind,url:pageUrl,visible:!!m.visible});if(s.active&&s.active!==before)newTaskAlert(sender.tab,s).catch(console.error);return s}
    if(m.kind==='alert-beep'){const cfg=TaskTime.alertSettings(await read());if(cfg.sound)await beep(cfg.volume,sender.tab.id);return {ok:true}}
    if(m.kind==='alert-clear'){chrome.notifications?.clear('tasktime-new-task');return {ok:true}}
+   if(m.kind==='post-qa')return apply({...e,kind:'post-qa'});
    if(['finish','task-error'].includes(m.kind))return apply({...e,kind:m.kind,finishKind:m.finishKind==='next'?'next':'exit'});
   }
   if(url.hostname==='app.ximble.com'&&m.kind==='clock'&&['in','out'].includes(m.value))return apply({...e,kind:'clock',value:m.value});

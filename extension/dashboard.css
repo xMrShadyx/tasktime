@@ -86,3 +86,5 @@ h3.sub{font-size:13px;font-weight:600;margin:4px 0 6px}
 .addrow{display:flex;gap:8px}.addrow input{flex:1;min-width:0;max-width:260px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--card);font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:6px}.legend span{display:inline-flex;align-items:center;gap:5px}
 .unknown{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--orange);border-radius:10px;margin-bottom:8px;font-size:13px}.unknown b{font-family:ui-monospace,Menlo,Consolas,monospace}.unknown span{flex:1;min-width:180px;color:var(--muted)}
+.chip.postqa{color:#b91c1c;border-color:#fecaca;background:#fef2f2;font-weight:600}.chip.postqa::before{background:#dc2626}
+@media (prefers-color-scheme:dark){.chip.postqa{color:#fca5a5;border-color:#4c1d1d;background:#2a1214}}

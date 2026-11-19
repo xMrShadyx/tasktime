@@ -56,6 +56,7 @@ function reduce(s,e){const now=e.at;
   else if(t)tickTask(t,now);
  }
  if(e.kind==='finish'){const t=taskNow(s);if(t&&t.owner===e.tab){tickTask(t,now);t.finishAt=now;t.finishObservedMs=t.observedMs;t.finishKind=e.finishKind;t.blocked=false}}
+ if(e.kind==='post-qa'){const t=taskNow(s);if(t&&t.owner===e.tab)t.postQa=true}
  if(e.kind==='task-error'){const t=taskNow(s);if(t&&t.owner===e.tab)t.blocked=true}
  if(e.kind==='tab-closed'){const t=taskNow(s);if(t?.owner===e.tab)endTask(s,now,'tab-closed')}
  if(e.kind==='clock')clock(s,e.value,now);
@@ -66,7 +67,10 @@ function reduce(s,e){const now=e.at;
  return s;
 }
 function dateKey(ms){const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function stats(s,from,to){return [...new Set([...TYPES,...extraOf(s).types,'other'])].map(type=>{const ts=s.tasks.filter(t=>t.type===type&&t.status==='completed'&&t.end&&dateKey(t.end)>=from&&dateKey(t.end)<=to);const values=ts.map(t=>t.observedMs);const total=values.reduce((a,b)=>a+b,0);return {type,count:values.length,total,min:values.length?Math.min(...values):null,max:values.length?Math.max(...values):null,avg:values.length?total/values.length:null}})}
+const statKey=t=>t.type+(t.postQa?' · Post QA':'');
+function stats(s,from,to){const done=s.tasks.filter(t=>t.status==='completed'&&t.end&&dateKey(t.end)>=from&&dateKey(t.end)<=to);
+ const base=[...new Set([...TYPES,...extraOf(s).types,'other'])];const keys=[];for(const k of base){keys.push(k);if(done.some(t=>t.postQa&&t.type===k))keys.push(k+' · Post QA')}
+ return keys.map(type=>{const values=done.filter(t=>statKey(t)===type).map(t=>t.observedMs);const total=values.reduce((a,b)=>a+b,0);return {type,count:values.length,total,min:values.length?Math.min(...values):null,max:values.length?Math.max(...values):null,avg:values.length?total/values.length:null}})}
 const ALERT={sound:true,volume:0.6,notify:false};
 function alertSettings(s){const a={...ALERT,...(s.alert||{})};return {sound:!!a.sound,volume:Math.max(0,Math.min(1,Number(a.volume)||0)),notify:!!a.notify}}
 const api={alertSettings,TYPES,LEAGUES,PAGES,extraOf,cleanList,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;

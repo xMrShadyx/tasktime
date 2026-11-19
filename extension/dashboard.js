@@ -65,7 +65,7 @@ function drawQuestions(){const w=W[lang];const box=$('questions');if(box.contain
   box.append(q)}}
 
 function taskItem(t,actions){const w=W[lang];const why=[];if(t.reason&&t.status!=='completed')why.push(w.reasons[t.reason]||t.reason);if(!t.finishAt&&t.status==='review')why.push(w.noFinish);if(t.gaps?.length)why.push(w.gaps(t.gaps.length));
- const it=el('div',{class:'item'},el('div',{class:'main'},el('div',{},el('b',{textContent:t.type}),' ',el('span',{class:'chip '+t.status,textContent:w.status_[t.status]+(t.corrected?' · '+w.corrected:'')})),el('small',{textContent:`${t.league||'football'} · ${dt(t.start)} → ${t.end?hm(t.end):'…'}${why.length?' · '+why.join(', '):''}`,title:t.id})),el('span',{class:'dur',textContent:fmt(t.observedMs)}));
+ const it=el('div',{class:'item'},el('div',{class:'main'},el('div',{},el('b',{textContent:t.type}),' ',el('span',{class:'chip '+t.status,textContent:w.status_[t.status]+(t.corrected?' · '+w.corrected:'')}),t.postQa?' ':null,t.postQa?el('span',{class:'chip postqa',textContent:'Post QA'}):null),el('small',{textContent:`${t.league||'football'} · ${dt(t.start)} → ${t.end?hm(t.end):'…'}${why.length?' · '+why.join(', '):''}`,title:t.id})),el('span',{class:'dur',textContent:fmt(t.observedMs)}));
  if(actions){it.append(el('button',{textContent:w.confirm,onclick:()=>mutate({kind:'correct-task',key:t.key,status:'completed'})}),el('button',{class:'danger',textContent:w.exclude,onclick:()=>mutate({kind:'correct-task',key:t.key,status:'excluded'})}))}
  return it}
 const empty=()=>el('div',{class:'empty',textContent:W[lang].empty});
