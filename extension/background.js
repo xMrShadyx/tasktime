@@ -1,5 +1,5 @@
 importScripts('core.js');
-const BUILD='0.1.20'; // replaced by scripts/package-extension.py; tells the report which background code is really running
+const BUILD='0.1.21'; // replaced by scripts/package-extension.py; tells the report which background code is really running
 let queue=Promise.resolve();
 const read=async()=> (await chrome.storage.local.get('tasktime')).tasktime||TaskTime.fresh();
 async function badge(s){
