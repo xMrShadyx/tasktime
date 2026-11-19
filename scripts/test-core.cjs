@@ -28,11 +28,11 @@ assert.throws(()=>C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{breaks:
 assert.throws(()=>C.reduce(s,{kind:'edit-shift',id,at:start+5*H,changes:{end:null}}),/end-required/);
 C.reduce(s,{kind:'delete-shift',id,at:start+6*H});assert.equal(s.shifts.length,0)});
 test('Schedule: weekly template, day override, night shift, auto planned end and comparison',()=>{let s=C.fresh();const day=C.dateKey(start);const wd=String(new Date(start).getDay());
-s.schedule=C.cleanSchedule({weekly:{[wd]:{start:'20:00',end:'02:00'}},days:{}});const p=C.planForDate(s,day);assert.equal(new Date(p.end).getHours(),2);assert.ok(p.end-p.start===6*3600e3);
+s.schedule=C.cleanSchedule({days:{[day]:{start:'20:00',end:'02:00'}}});const p=C.planForDate(s,day);assert.equal(new Date(p.end).getHours(),2);assert.ok(p.end-p.start===6*3600e3);
 event(s,'clock',4*60e3,{value:'in'});assert.equal(s.prompts.filter(x=>x.kind==='plan').length,0);assert.equal(s.shifts[0].planned,p.end);
 event(s,'clock',6*3600e3+30*60e3,{value:'out'});const q=s.prompts.find(x=>x.kind==='clock-out');event(s,'answer',6*3600e3+31*60e3,{id:q.id,value:'finish'});
 const c=C.compareShift(s,s.shifts[0]);assert.equal(c.startDiff,4*60e3);assert.equal(c.late,false);assert.equal(c.over,true);
-s.schedule=C.cleanSchedule({weekly:{[wd]:{start:'20:00',end:'02:00'}},days:{[day]:{off:true}}});assert.equal(C.planForDate(s,day),null);
+s.schedule=C.cleanSchedule({days:{[day]:{off:true}}});assert.equal(C.planForDate(s,day),null);
 assert.deepEqual(C.cleanSchedule({weekly:{'1':{start:'25:00',end:'10:00'}}}).weekly,{});
 let m=C.fresh();m.schedule=C.cleanSchedule({days:{[day]:{start:'10:00',end:'18:00'}}});const d=new Date(start);d.setHours(23,0,0,0);assert.equal(C.missedPlans(m,1,+d).length,1)});
 test('Ximble merge: several shifts per day, day off for empty days, manual wins',()=>{let s=C.fresh();s.schedule=C.cleanSchedule({days:{'2026-11-20':{start:'09:00',end:'17:00',source:'manual'}}});
@@ -40,3 +40,8 @@ const n=C.mergeXimble(s,['2026-11-19','2026-11-20','2026-11-21'],[{date:'2026-11
 assert.equal(C.plansForDate(s,'2026-11-19').length,2);assert.equal(s.schedule.days['2026-11-21'].off,true);assert.equal(s.schedule.days['2026-11-20'].source,'manual');assert.equal(n,2);
 s.schedule=C.cleanSchedule(s.schedule);assert.equal(C.plansForDate(s,'2026-11-19').length,2);
 C.mergeXimble(s,['2026-11-06'],[{date:'2026-11-06',start:'20:50',end:'00:00'}],Date.now());const p=C.planForDate(s,'2026-11-06');assert.equal(p.end-p.start,(3*60+10)*60e3)});
+test('Ximble month view with "more…" keeps the hidden shifts already known',()=>{let s=C.fresh();
+C.mergeXimble(s,['2026-11-19'],[{date:'2026-11-19',start:'11:00',end:'14:30'},{date:'2026-11-19',start:'18:00',end:'23:00'}],Date.now());
+C.mergeXimble(s,['2026-11-19','2026-11-20'],[{date:'2026-11-19',start:'11:00',end:'14:30'}],Date.now(),['2026-11-19']);
+assert.equal(C.plansForDate(s,'2026-11-19').length,2);
+C.mergeXimble(s,['2026-11-19'],[{date:'2026-11-19',start:'11:00',end:'14:30'}],Date.now());assert.equal(C.plansForDate(s,'2026-11-19').length,1)});

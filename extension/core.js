@@ -31,7 +31,7 @@ function cleanSchedule(x){const o={weekly:{},days:{},tolerance:5,since:Number(x?
   // A day may hold several shifts (e.g. 11:00–14:30 and 18:00–23:00). Older data stored a single {start,end}.
   const list=(Array.isArray(d.shifts)?d.shifts:[d]).filter(x=>x&&HM.test(x.start)&&HM.test(x.end)).slice(0,6).map(x=>({start:x.start,end:x.end}));if(list.length)o.days[k]={shifts:list,source}}return o}
 function dayEntry(sc,key){const d=sc?.days?.[key];if(!d)return null;if(d.off)return d;if(d.shifts)return d;if(d.start&&d.end)return {shifts:[{start:d.start,end:d.end}],source:d.source||'manual'};return null}
-function plansForDate(s,key){const sc=s.schedule;if(!sc)return [];const day=dayEntry(sc,key);const w=sc.weekly?.[String(new Date(key+'T12:00').getDay())];
+function plansForDate(s,key){const sc=s.schedule;if(!sc)return [];const day=dayEntry(sc,key);const w=null;
  if(day?.off)return [];const list=day?day.shifts:(w?[w]:[]);const source=day?day.source:'weekly';
  const at=(hm)=>{const [h,m]=hm.split(':').map(Number);const t=new Date(key+'T00:00');t.setHours(h,m,0,0);return +t};
  return list.map(x=>{const start=at(x.start);let end=at(x.end);if(end<=start){const n=new Date(end);n.setDate(n.getDate()+1);end=+n}return {date:key,start,end,source}}).sort((a,b)=>a.start-b.start)}
@@ -43,9 +43,11 @@ function compareShift(s,sh){const p=sh.scheduled||planForTime(s,sh.start);if(!p)
 function missedPlans(s,days,now){const out=[];for(let i=days;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);for(const p of plansForDate(s,dateKey(+d))){if(p.start>now||(s.schedule?.since&&p.start<s.schedule.since))continue;
  const hit=s.shifts.some(sh=>sh.start<p.end&&(sh.end??now)>p.start-30*60e3);if(!hit)out.push(p)}}return out}
 // Shifts read from Ximble "My Schedule": replace Ximble entries for the visible dates; manual entries win.
-function mergeXimble(s,visible,shifts,now){const sc=cleanSchedule(s.schedule||{});if(!sc.since)sc.since=now;const by={};for(const x of shifts){if(!/^\d{4}-\d{2}-\d{2}$/.test(x.date)||!HM.test(x.start)||!HM.test(x.end))continue;(by[x.date]||=[]).push({start:x.start,end:x.end})}
+function mergeXimble(s,visible,shifts,now,partial=[]){const sc=cleanSchedule(s.schedule||{});if(!sc.since)sc.since=now;const by={};for(const x of shifts){if(!/^\d{4}-\d{2}-\d{2}$/.test(x.date)||!HM.test(x.start)||!HM.test(x.end))continue;(by[x.date]||=[]).push({start:x.start,end:x.end})}
  let changed=0;for(const key of visible){if(!/^\d{4}-\d{2}-\d{2}$/.test(key))continue;const cur=sc.days[key];if(cur&&cur.source==='manual')continue;
-  const next=by[key]?{shifts:by[key].sort((a,b)=>a.start.localeCompare(b.start)).slice(0,6),source:'ximble'}:{off:true,source:'ximble'};if(JSON.stringify(cur)!==JSON.stringify(next)){sc.days[key]=next;changed++}}
+  // A day shown as "N more…" lists only some of its shifts: add them to what is known instead of replacing.
+  let list=by[key]||[];if(partial.includes(key)&&cur?.shifts){const seen=new Set(list.map(x=>x.start+x.end));for(const x of cur.shifts)if(!seen.has(x.start+x.end))list.push(x)}
+  const next=list.length?{shifts:list.sort((a,b)=>a.start.localeCompare(b.start)).slice(0,6),source:'ximble'}:{off:true,source:'ximble'};if(JSON.stringify(cur)!==JSON.stringify(next)){sc.days[key]=next;changed++}}
  s.schedule=sc;s.schedule.ximbleAt=now;return changed}
 function clock(s,value,now){if(!['in','out'].includes(value))return;const prev=s.clock;const sh0=currentShift(s);if(sh0&&s.health.clockSeen&&now-s.health.clockSeen>45000){(sh0.gaps||=[]).push({from:s.health.clockSeen,to:now})}s.clock=value;s.health.clockSeen=now;if(prev===value)return;
  let sh=currentShift(s);
