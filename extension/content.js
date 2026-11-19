@@ -52,8 +52,15 @@ if(isTasks){
 if(isTasks){
  let url='',visited=new Set();
  const style=document.createElement('style');style.textContent='[data-tasktime-chunk]{box-shadow:inset 0 -4px 0 #ea8a0c!important;transition:box-shadow .2s}[data-tasktime-chunk="done"]{box-shadow:inset 0 -4px 0 #16a34a!important}';
- const lum=c=>{const m=String(c).match(/\d+(\.\d+)?/g);if(!m)return 0;const [r,g,b]=m.map(Number);return (0.2126*r+0.7152*g+0.0722*b)/255};
- const hasTask=el=>!el.disabled&&el.getAttribute('aria-disabled')!=='true'&&!/\bdisabled\b/i.test(el.className||'')&&parseFloat(getComputedStyle(el).opacity||'1')>=.7&&lum(getComputedStyle(el).color)<.5;
+ // Contrast between the chunk number and its button background, counting alpha and opacity:
+ // a chunk with a task has dark-grey text on grey; one without has faded text (light colour or translucent dark).
+ const rgba=c=>{const m=String(c).match(/[\d.]+/g)||[];return {r:+m[0]||0,g:+m[1]||0,b:+m[2]||0,a:m[3]===undefined?1:+m[3]}};
+ const L=({r,g,b})=>(0.2126*r+0.7152*g+0.0722*b)/255;
+ function bgOf(el){for(let e=el;e;e=e.parentElement){const c=rgba(getComputedStyle(e).backgroundColor);if(c.a>.05)return c}return {r:255,g:255,b:255,a:1}}
+ function contrast(btn){const w=document.createTreeWalker(btn,NodeFilter.SHOW_TEXT);let n,t=null;while((n=w.nextNode()))if(/\d/.test(n.nodeValue)){t=n.parentElement;break}if(!t)return 0;
+  let op=1;for(let e=t;e&&e!==btn.parentElement;e=e.parentElement)op*=parseFloat(getComputedStyle(e).opacity||'1');
+  const fg=rgba(getComputedStyle(t).color),bg=bgOf(btn),a=fg.a*op;const mix=k=>fg[k]*a+bg[k]*(1-a);return L(bg)-L({r:mix('r'),g:mix('g'),b:mix('b')})}
+ const hasTask=el=>!el.disabled&&el.getAttribute('aria-disabled')!=='true'&&!/\bdisabled\b/i.test(el.className||'')&&contrast(el)>.35;
  function chunkRow(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode())){if(!/Jump to chunk for task:\s*\d+/i.test(n.nodeValue))continue;let jump=n.parentElement;while(jump&&jump.parentElement&&![...jump.parentElement.children].some(c=>c!==jump&&/^\s*\d+\s*$/.test(c.textContent)))jump=jump.parentElement;if(!jump?.parentElement)return null;
    return [...jump.parentElement.children].filter(c=>c!==jump&&/^\s*\d+\s*$/.test(c.textContent)&&visible(c))}return null}
  function isPostQa(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode()))if(n.nodeValue.trim().toLowerCase()==='post qa'&&n.parentElement&&visible(n.parentElement))return true;return false}
