@@ -21,7 +21,7 @@ function prompt(s,kind,data={}){if(!s.prompts.some(p=>p.kind===kind&&p.shift===d
 function currentShift(s){return s.shifts.find(x=>x.id===s.shift)}
 function taskNow(s){return s.tasks.find(x=>x.key===s.active)}
 function tickTask(t,now){if(!t)return;const dt=now-t.lastSeen;if(dt<0||dt>45000){if(dt!==0)t.gaps.push({from:t.lastSeen,to:now});}else t.observedMs+=dt;t.lastSeen=now;}
-function endTask(s,now,reason){const t=taskNow(s);if(!t)return;tickTask(t,now);t.end=now;t.reason=reason;t.status=t.finishAt&&now-t.finishAt<=120000&&['next-task','left-task','tab-closed'].includes(reason)&&!t.blocked?'completed':'review';if(t.status==='completed'){t.observedMs=t.finishObservedMs;t.transitionMs=now-t.finishAt;}if(t.gaps.length||s.tasks.some(x=>x.key!==t.key&&x.id===t.id&&x.type===t.type&&x.status==='completed'))t.status='review';s.active=null;}
+function endTask(s,now,reason){const t=taskNow(s);if(!t)return;tickTask(t,now);t.end=now;t.reason=reason;t.status=t.finishAt&&now-t.finishAt<=120000&&['next-task','left-task','tab-closed'].includes(reason)&&!t.blocked?'completed':'review';if(t.removed){t.status='excluded';t.reason='removed';s.active=null;return}if(t.status==='completed'){t.observedMs=t.finishObservedMs;t.transitionMs=now-t.finishAt;}if(t.gaps.length||s.tasks.some(x=>x.key!==t.key&&x.id===t.id&&x.type===t.type&&x.status==='completed'))t.status='review';s.active=null;}
 /* Work schedule (optional): a weekly template plus per-day entries (which override the template; off:true = day off).
    Times are "HH:MM"; an end not after the start means the shift ends the next day (night shift). */
 const HM=/^([01]\d|2[0-3]):[0-5]\d$/;const TOL=5*60e3;
@@ -105,7 +105,8 @@ function reduce(s,e){const now=e.at;
   if(info&&!t){t={key:uuid(),...info,owner:e.tab,start:now,lastSeen:now,observedMs:0,gaps:[],status:'active',shift:s.shift,finishAt:null};s.tasks.push(t);s.active=t.key;}
   else if(t)tickTask(t,now);
  }
- if(e.kind==='finish'){const t=taskNow(s);if(t&&t.owner===e.tab){tickTask(t,now);t.finishAt=now;t.finishObservedMs=t.observedMs;t.finishKind=e.finishKind;t.blocked=false}}
+ if(e.kind==='finish'){const t=taskNow(s);if(t&&t.owner===e.tab){tickTask(t,now);t.finishAt=now;t.finishObservedMs=t.observedMs;t.finishKind=e.finishKind;t.blocked=false;if(e.variant)t.variant=e.variant}}
+ if(e.kind==='task-removed'){const t=taskNow(s);if(t&&t.owner===e.tab)t.removed=true}
  if(e.kind==='post-qa'){const t=taskNow(s);if(t&&t.owner===e.tab)t.postQa=true}
  if(e.kind==='task-error'){const t=taskNow(s);if(t&&t.owner===e.tab)t.blocked=true}
  if(e.kind==='tab-closed'){const t=taskNow(s);if(t?.owner===e.tab)endTask(s,now,'tab-closed')}

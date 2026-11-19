@@ -51,3 +51,7 @@ event(s,'clock',3.5*H,{value:'out'});event(s,'answer',3.5*H+1000,{id:s.prompts.f
 event(s,'clock',7*H,{value:'in'});assert.equal(s.shifts.length,2);assert.equal(s.shifts[0].end,start+3.5*H);assert.equal(s.shifts[0].breaks.length,0);assert.ok(!s.prompts.some(p=>p.kind==='overtime'));
 let r=C.fresh();r.shifts=[{id:'a',start:start,end:null,planned:start+3.5*H,intervals:[{start:start,end:start+3.5*H},{start:start+7*H,end:null}],breaks:[{start:start+3.5*H,end:start+7*H}],overtime:false}];r.shift='a';r.prompts=[{id:'o',kind:'overtime',shift:'a',at:start+3.5*H}];
 assert.equal(C.repairShifts(r),1);assert.equal(r.shifts.length,2);assert.equal(r.shifts[0].end,start+3.5*H);assert.equal(r.shifts[1].start,start+7*H);assert.equal(r.shift,r.shifts[1].id);assert.equal(r.prompts.length,0);assert.equal(C.repairShifts(r),0)});
+test('Moderator-removed task is excluded automatically; Incorrect Player finishes a task',()=>{let s=C.fresh();event(s,'task-observe',0,{url:url('a'),tab:1});event(s,'task-removed',5000,{tab:1});event(s,'task-observe',8000,{url:url('b'),tab:1});
+assert.equal(s.tasks[0].status,'excluded');assert.equal(s.tasks[0].reason,'removed');
+event(s,'finish',20000,{tab:1,finishKind:'next',variant:'incorrect-player'});event(s,'task-observe',22000,{url:url('c'),tab:1});assert.equal(s.tasks[1].status,'completed');assert.equal(s.tasks[1].variant,'incorrect-player');
+assert.equal(C.stats(s,C.dateKey(start),C.dateKey(start)).find(r=>r.type==='ball').count,1)});

@@ -1,5 +1,5 @@
 importScripts('core.js');
-const BUILD='0.1.25'; // replaced by scripts/package-extension.py; tells the report which background code is really running
+const BUILD='0.1.26'; // replaced by scripts/package-extension.py; tells the report which background code is really running
 let queue=Promise.resolve();
 const read=async()=> (await chrome.storage.local.get('tasktime')).tasktime||TaskTime.fresh();
 async function badge(s){
@@ -35,7 +35,8 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
    if(m.kind==='alert-beep'){const cfg=TaskTime.alertSettings(await read());if(cfg.sound)await beep(cfg.volume,sender.tab.id);return {ok:true}}
    if(m.kind==='alert-clear'){chrome.notifications?.clear('tasktime-new-task');return {ok:true}}
    if(m.kind==='post-qa')return apply({...e,kind:'post-qa'});
-   if(['finish','task-error'].includes(m.kind))return apply({...e,kind:m.kind,finishKind:m.finishKind==='next'?'next':'exit'});
+   if(['finish','task-error'].includes(m.kind))return apply({...e,kind:m.kind,finishKind:m.finishKind==='next'?'next':'exit',variant:m.variant==='incorrect-player'?'incorrect-player':undefined});
+   if(m.kind==='task-removed')return apply({...e,kind:'task-removed'});
   }
   if(url.hostname==='app.ximble.com'&&m.kind==='ximble-schedule'&&Array.isArray(m.visible)&&Array.isArray(m.shifts)){const s=await read();const n=TaskTime.mergeXimble(s,m.visible.slice(0,62).map(String),m.shifts.slice(0,200),Date.now(),Array.isArray(m.partial)?m.partial.slice(0,62).map(String):[]);await chrome.storage.local.set({tasktime:s});return {changed:n}}
   if(url.hostname==='app.ximble.com'&&m.kind==='clock'&&['in','out'].includes(m.value))return apply({...e,kind:'clock',value:m.value});
