@@ -1,5 +1,5 @@
 importScripts('core.js');
-const BUILD='0.1.7'; // replaced by scripts/package-extension.py; tells the report which background code is really running
+const BUILD='0.1.8'; // replaced by scripts/package-extension.py; tells the report which background code is really running
 let queue=Promise.resolve();
 const read=async()=> (await chrome.storage.local.get('tasktime')).tasktime||TaskTime.fresh();
 async function badge(s){
@@ -19,6 +19,7 @@ chrome.runtime.onMessage.addListener((m,sender,reply)=>{
   if(m.kind==='answer'&&(ownPage||sender.tab))return apply({kind:'answer',id:m.id,value:String(m.value).slice(0,20),at:Date.now()});
   if(m.kind==='restore'&&ownPage){const d=m.data;if(!d||typeof d!=='object'||d.schema!==1||!['tasks','shifts','prompts','audit'].every(k=>Array.isArray(d[k])))throw Error('invalid-backup');const s={...TaskTime.fresh(),...d};await chrome.storage.local.set({tasktime:s});await badge(s);return {tasks:s.tasks.length,shifts:s.shifts.length}}
   if(m.kind==='build'&&ownPage)return BUILD;
+  if(m.kind==='custom-config'&&ownPage){const s=await read();const c=m.custom||{};s.custom={leagues:TaskTime.cleanList(c.leagues),types:TaskTime.cleanList(c.types),pages:TaskTime.cleanList(c.pages)};if(s.unknown)for(const t of s.custom.types)delete s.unknown[t];if(m.dismiss&&s.unknown)delete s.unknown[String(m.dismiss)];await chrome.storage.local.set({tasktime:s});return s.custom}
   if(m.kind==='check-update'&&ownPage)return checkUpdate(true);
   if(m.kind==='alert-settings'&&ownPage){const s=await read();s.alert=TaskTime.alertSettings({alert:m.alert});await chrome.storage.local.set({tasktime:s});return s.alert}
   if(m.kind==='test-sound'&&ownPage){await beep(TaskTime.alertSettings(await read()).volume,sender.tab?.id);return {ok:true}}
@@ -47,6 +48,7 @@ async function checkUpdate(force){const s=await read();const last=s.health?.upda
  if(s.update&&!newer(s.update.version,chrome.runtime.getManifest().version)){s.update=null;await chrome.storage.local.set({tasktime:s});await badge(s)}
 if(!force&&Date.now()-last<6*3600e3)return s.update||null;
  let info=null;try{const r=await fetch(SITE+'version.json',{cache:'no-store'});if(r.ok)info=await r.json()}catch{}
+ try{const r=await fetch(SITE+'config.json',{cache:'no-store'});if(r.ok){const c=await r.json();s.remote={leagues:TaskTime.cleanList(c.leagues),types:TaskTime.cleanList(c.types),pages:TaskTime.cleanList(c.pages)};if(!info?.version)await chrome.storage.local.set({tasktime:s})}}catch{}
  if(!info?.version)return s.update||null;
  s.health={...(s.health||{}),updateChecked:Date.now()};const cur=chrome.runtime.getManifest().version;
  s.update=info&&newer(info.version,cur)?{version:String(info.version).slice(0,20),url:SITE+'#s0'}:null;

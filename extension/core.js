@@ -6,7 +6,17 @@ const uuid=()=>globalThis.crypto?.randomUUID?.()||Math.random().toString(36).sli
 const LEAGUES=['cbf1','dfd','dsl','efl','football','football-delayed','hpl','ligue1','ligue2','lkl','ncaa-mb','ncaa-wb','svk1l','uefa','wnba'];
 const ID=/^[a-zA-Z0-9_-]{1,100}$/;
 const PAGES=['next','config','mercury','generate','filters','summary','timing','queue'];
-function taskFromURL(url){try{const u=new URL(url);if(u.hostname!=='redstone.secondspectrum.com')return null;const seg=u.pathname.split('/').filter(Boolean).map(decodeURIComponent);const gi=seg[0]?.toLowerCase()==='global-tasks';const li=gi&&seg.length>=3?1:seg.findIndex(x=>LEAGUES.includes(x.toLowerCase()));if(gi&&!/^[a-z0-9-]{1,40}$/i.test(seg[1]||''))return null;if(li<0)return null;const rest=seg.slice(li+1);if(!rest.length||rest.length>2)return null;const id=rest.at(-1);if(!ID.test(id)||PAGES.includes(id.toLowerCase()))return null;const raw=rest.length===2?rest[0].toLowerCase():null;const type=raw&&TYPES.includes(raw)?raw:'other';return {league:seg[li].toLowerCase(),type,id}}catch{return null}}
+const SLUG=/^[a-z0-9_-]{1,40}$/;
+const cleanList=x=>Array.isArray(x)?[...new Set(x.map(v=>String(v).trim().toLowerCase()).filter(v=>SLUG.test(v)))].slice(0,200):[];
+// Extra lists come from the user's own Settings (s.custom) and from the site's config.json (s.remote).
+function extraOf(s){const c=s?.custom||{},r=s?.remote||{};const m=k=>[...new Set([...cleanList(c[k]),...cleanList(r[k])])];return {leagues:m('leagues'),types:m('types'),pages:m('pages')}}
+function taskFromURL(url,extra={}){try{const u=new URL(url);if(u.hostname!=='redstone.secondspectrum.com')return null;
+ const leagues=[...LEAGUES,...(extra.leagues||[])],types=[...TYPES,...(extra.types||[])],pages=[...PAGES,...(extra.pages||[])];
+ const seg=u.pathname.split('/').filter(Boolean).map(decodeURIComponent);const gi=seg[0]?.toLowerCase()==='global-tasks';
+ const li=gi&&seg.length>=3?1:seg.findIndex(x=>leagues.includes(x.toLowerCase()));if(gi&&!/^[a-z0-9-]{1,40}$/i.test(seg[1]||''))return null;if(li<0)return null;
+ const rest=seg.slice(li+1);if(!rest.length||rest.length>2)return null;const id=rest.at(-1);if(!ID.test(id)||pages.includes(id.toLowerCase()))return null;
+ const raw=rest.length===2?rest[0].toLowerCase():null;const known=raw&&types.includes(raw);
+ const r={league:seg[li].toLowerCase(),type:known?raw:'other',id};if(raw&&!known)r.rawType=raw.slice(0,40);return r}catch{return null}}
 function prompt(s,kind,data={}){if(!s.prompts.some(p=>p.kind===kind&&p.shift===data.shift))s.prompts.push({id:uuid(),kind,...data})}
 function currentShift(s){return s.shifts.find(x=>x.id===s.shift)}
 function taskNow(s){return s.tasks.find(x=>x.key===s.active)}
@@ -39,7 +49,7 @@ function answer(s,id,value,now){const p=s.prompts.find(x=>x.id===id);if(!p)throw
 }
 function reduce(s,e){const now=e.at;
  if(e.kind==='task-observe'){
-  const info=taskFromURL(e.url);s.health.taskSeen=now;let t=taskNow(s);
+  const info=taskFromURL(e.url,extraOf(s));s.health.taskSeen=now;if(info?.rawType){s.unknown||={};s.unknown[info.rawType]=Date.now()}let t=taskNow(s);
   if(t&&t.owner!==e.tab){if(!e.visible)return s;endTask(s,now,'tab-conflict');t=null;}
   if(t&&(t.id!==info?.id||t.type!==info?.type||(t.league||'football')!==info?.league)){endTask(s,now,info?'next-task':'left-task');t=null;}
   if(info&&!t){t={key:uuid(),...info,owner:e.tab,start:now,lastSeen:now,observedMs:0,gaps:[],status:'active',shift:s.shift,finishAt:null};s.tasks.push(t);s.active=t.key;}
@@ -56,8 +66,8 @@ function reduce(s,e){const now=e.at;
  return s;
 }
 function dateKey(ms){const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function stats(s,from,to){return [...TYPES,'other'].map(type=>{const ts=s.tasks.filter(t=>t.type===type&&t.status==='completed'&&t.end&&dateKey(t.end)>=from&&dateKey(t.end)<=to);const values=ts.map(t=>t.observedMs);const total=values.reduce((a,b)=>a+b,0);return {type,count:values.length,total,min:values.length?Math.min(...values):null,max:values.length?Math.max(...values):null,avg:values.length?total/values.length:null}})}
+function stats(s,from,to){return [...new Set([...TYPES,...extraOf(s).types,'other'])].map(type=>{const ts=s.tasks.filter(t=>t.type===type&&t.status==='completed'&&t.end&&dateKey(t.end)>=from&&dateKey(t.end)<=to);const values=ts.map(t=>t.observedMs);const total=values.reduce((a,b)=>a+b,0);return {type,count:values.length,total,min:values.length?Math.min(...values):null,max:values.length?Math.max(...values):null,avg:values.length?total/values.length:null}})}
 const ALERT={sound:true,volume:0.6,notify:false};
 function alertSettings(s){const a={...ALERT,...(s.alert||{})};return {sound:!!a.sound,volume:Math.max(0,Math.min(1,Number(a.volume)||0)),notify:!!a.notify}}
-const api={alertSettings,TYPES,LEAGUES,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;
+const api={alertSettings,TYPES,LEAGUES,PAGES,extraOf,cleanList,fresh,reduce,taskFromURL,planTime,dateKey,stats};if(typeof module!=='undefined')module.exports=api;root.TaskTime=api;
 })(globalThis);
