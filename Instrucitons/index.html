@@ -1,6 +1,6 @@
 <!doctype html><html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TaskTime — Ръководство</title><meta name="description" content="Пълно ръководство за TaskTime: инсталиране, първоначална настройка, работа през смяната, сигнали, Post QA, график от Ximble, отчет, обновяване, архив и решаване на проблеми.">
-<link rel="icon" href="../assets/tasktime.svg" type="image/svg+xml"><link rel="stylesheet" href="../style.css?v=202611200955">
+<link rel="icon" href="../assets/tasktime.svg" type="image/svg+xml"><link rel="stylesheet" href="../style.css?v=202611201014">
 <style>
 .guide{display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;max-width:1160px;margin:0 auto;padding:40px 20px 80px}
 .toc{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 100px);overflow:auto;font-size:14px}
@@ -16,7 +16,7 @@
 .g ol.gsteps{counter-reset:s;list-style:none;padding:0;margin:14px 0 20px;display:grid;gap:10px}
 .g ol.gsteps>li{counter-increment:s;position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 56px}
 .g ol.gsteps>li::before{content:counter(s);position:absolute;left:14px;top:12px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:13px}
-.g ol.gsteps>li b{color:var(--ink)}
+.g ol.gsteps>li b{color:var(--ink)}.g ol.gsteps>li figure{margin:12px 0 4px}.g ol.gsteps>li figure img{max-width:640px}
 .g ul{padding-left:20px}.g ul li{margin:6px 0}
 .g .tbl{overflow:auto;margin:14px 0 20px;border:1px solid var(--line);border-radius:12px}.g table{width:100%;border-collapse:collapse;font-size:14px;background:var(--card)}.g th,.g td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}.g th{background:var(--soft);font-size:12px;color:var(--muted);font-weight:600}.g tr:last-child td{border-bottom:0}
 .g figure{margin:16px 0 22px}.g figure img{width:100%;height:auto}.g figure img{border-radius:12px;border:1px solid var(--line);box-shadow:var(--shadow);background:var(--card)}.g figcaption{font-size:13px;color:var(--muted);margin-top:8px}
@@ -56,8 +56,8 @@
 <li><b>Създай папка</b>, например <code>Documents\TaskTime</code>.</li>
 <li><b>Разархивирай</b> сваления ZIP в тази папка: десен бутон → <b>Extract All</b> (Извлечи всички) → избери папката. Вътре трябва да има файл <code>manifest.json</code>.</li>
 <li><b>Отвори страницата с разширения:</b> напиши в адресната лента <code>chrome://extensions</code> (Chrome) или <code>opera://extensions</code> (Opera) и натисни <kbd>Enter</kbd>.</li>
-<li><b>Включи „Developer mode“</b> (Режим за програмисти) — ключ горе вдясно в Chrome, горе в Opera.</li>
-<li>Натисни <b>„Load unpacked“</b> (Зареждане на разопаковано) и избери папката от стъпка 2 — тази, в която е <code>manifest.json</code>, не самия ZIP.</li>
+<li><b>Включи „Developer mode“</b> (Режим за програмисти) — ключ горе вдясно в Chrome, горе в Opera.<figure><img src="../assets/shots/guide/ext-1-devmode.png" alt="" loading="lazy"><figcaption>Ключът „Developer mode“ горе вдясно (Chrome). В Opera е горе на страницата.</figcaption></figure></li>
+<li>Натисни <b>„Load unpacked“</b> (Зареждане на разопаковано) и избери папката от стъпка 2 — тази, в която е <code>manifest.json</code>, не самия ZIP.<figure><img src="../assets/shots/guide/ext-2-load.png" alt="" loading="lazy"><figcaption>След включването се появява „Load unpacked“. След зареждане TaskTime се вижда в списъка.</figcaption></figure></li>
 <li><b>Закачи иконката:</b> натисни иконката-пъзел в лентата на браузъра → карфицата до <b>TaskTime</b>. Иконката (часовник с отметка) остава винаги видима.</li>
 <li><b>Презареди</b> отворените табове с Redstone и Ximble (<kbd>F5</kbd>). Готово.</li>
 </ol>
@@ -70,7 +70,7 @@
 <li><b>Избери език:</b> горе вдясно в отчета — <b>БГ | EN</b>. Езикът важи за отчета, въпросите и известията.</li>
 <li><b>Пробвай звука:</b> отчет → <b>Настройки</b> → „Пробвай звука“. Ако не чуваш нищо, виж раздел 14.</li>
 <li><b>Включи известието в системата</b> (по желание): Настройки → „Известие в системата“ → разреши в браузъра.</li>
-<li><b>Запиши папката:</b> Настройки → „Версия“ → „Отвори разширенията“ → на страницата на TaskTime копирай пътя до <b>„Loaded from“</b> → постави го в „Папка на добавката“ → „Запази“.</li>
+<li><b>Запиши папката:</b> Настройки → „Версия“ → „Отвори разширенията“ → на страницата на TaskTime копирай пътя до <b>„Loaded from“</b> → постави го в „Папка на добавката“ → „Запази“.<figure><img src="../assets/shots/guide/ext-4-path.png" alt="" loading="lazy"><figcaption>Пътят до папката е под „Source“ → „Loaded from“.</figcaption></figure></li>
 <li><b>Вземи графика:</b> отвори Ximble → <b>My Schedule</b> → изглед <b>Week</b>. Долу вдясно ще видиш „✓ Графикът е взет“. Повече в раздел 8.</li>
 <li>Дръж <b>Ximble отворен</b> в отделен таб през цялата смяна.</li>
 </ol>
@@ -184,7 +184,7 @@
 <li><b>Свали</b> новия ZIP от сайта.</li>
 <li>Разархивирай го <b>върху същата папка</b> → при въпроса избери <b>Replace</b> (замени файловете).</li>
 <li>Отвори <code>chrome://extensions</code> / <code>opera://extensions</code> (или Настройки → „Отвори разширенията“).</li>
-<li>На картата на TaskTime натисни <b>↻ Reload</b> — в Chrome е долу вдясно, в Opera до името.</li>
+<li>На картата на TaskTime натисни <b>↻ Reload</b> — в Chrome е долу вдясно, в Opera до името.<figure><img src="../assets/shots/guide/ext-3-reload.png" alt="" loading="lazy"><figcaption>Бутонът ↻ Reload на картата на TaskTime.</figcaption></figure></li>
 <li><b>Презареди</b> табовете с Redstone и Ximble (<kbd>F5</kbd>).</li>
 <li>Провери: Настройки → Версия показва новата версия, а ↑ го няма. Записите остават.</li>
 </ol>
@@ -240,8 +240,8 @@
 <li><b>Create a folder</b>, e.g. <code>Documents\TaskTime</code>.</li>
 <li><b>Extract</b> the ZIP into it: right-click → <b>Extract All</b> → choose the folder. It must contain <code>manifest.json</code>.</li>
 <li><b>Open the extensions page:</b> type <code>chrome://extensions</code> (Chrome) or <code>opera://extensions</code> (Opera) and press <kbd>Enter</kbd>.</li>
-<li>Turn on <b>Developer mode</b> — top right in Chrome, at the top in Opera.</li>
-<li>Click <b>Load unpacked</b> and choose the folder from step 2 — the one with <code>manifest.json</code>, not the ZIP.</li>
+<li>Turn on <b>Developer mode</b> — top right in Chrome, at the top in Opera.<figure><img src="../assets/shots/guide/ext-1-devmode.png" alt="" loading="lazy"><figcaption>The “Developer mode” switch, top right (Chrome). In Opera it is at the top of the page.</figcaption></figure></li>
+<li>Click <b>Load unpacked</b> and choose the folder from step 2 — the one with <code>manifest.json</code>, not the ZIP.<figure><img src="../assets/shots/guide/ext-2-load.png" alt="" loading="lazy"><figcaption>“Load unpacked” appears once Developer mode is on. After loading, TaskTime is listed.</figcaption></figure></li>
 <li><b>Pin the icon:</b> click the puzzle icon in the toolbar → the pin next to <b>TaskTime</b>.</li>
 <li><b>Reload</b> any open Redstone and Ximble tabs (<kbd>F5</kbd>). Done.</li>
 </ol>
@@ -253,7 +253,7 @@
 <li><b>Language:</b> top right of the report — <b>БГ | EN</b>. It applies to the report, questions and notifications.</li>
 <li><b>Test the sound:</b> report → <b>Settings</b> → “Test sound”.</li>
 <li><b>System notification</b> (optional): Settings → “System notification” → allow in the browser.</li>
-<li><b>Save the folder path:</b> Settings → “Version” → “Open extensions” → copy the path next to <b>“Loaded from”</b> → paste into “Extension folder” → “Save”.</li>
+<li><b>Save the folder path:</b> Settings → “Version” → “Open extensions” → copy the path next to <b>“Loaded from”</b> → paste into “Extension folder” → “Save”.<figure><img src="../assets/shots/guide/ext-4-path.png" alt="" loading="lazy"><figcaption>The folder path is under “Source” → “Loaded from”.</figcaption></figure></li>
 <li><b>Get your schedule:</b> Ximble → <b>My Schedule</b> → <b>Week</b> view. You will see “✓ Schedule read” bottom right (section 8).</li>
 <li>Keep <b>Ximble open</b> in its own tab during the shift.</li>
 </ol></section>
@@ -324,7 +324,7 @@
 <tr><td><b>New task alert</b></td><td>sound on/off, volume, test, system notification</td></tr><tr><td><b>Tips</b></td><td>Post QA lines on/off</td></tr><tr><td><b>Leagues and task types</b></td><td>add a league, type or non-task page; unknown types are suggested</td></tr><tr><td><b>Version</b></td><td>installed version, Check now, update steps, Open extensions</td></tr><tr><td><b>Extension folder</b></td><td>save the folder path</td></tr><tr><td><b>Your data</b></td><td>download backup (JSON), restore from backup</td></tr></table></div></section>
 
 <section id="en-update"><h2><span class="n">12</span>Updating</h2>
-<ol class="gsteps"><li>Settings → <b>Check now</b> (also checked automatically a few times a day).</li><li><b>Download</b> the new ZIP.</li><li>Extract it <b>over the same folder</b> → <b>Replace</b>.</li><li>Open <code>chrome://extensions</code> / <code>opera://extensions</code>.</li><li>Press <b>↻ Reload</b> on TaskTime.</li><li><b>Reload</b> Redstone and Ximble (<kbd>F5</kbd>).</li><li>Check Settings → Version. Your records stay.</li></ol>
+<ol class="gsteps"><li>Settings → <b>Check now</b> (also checked automatically a few times a day).</li><li><b>Download</b> the new ZIP.</li><li>Extract it <b>over the same folder</b> → <b>Replace</b>.</li><li>Open <code>chrome://extensions</code> / <code>opera://extensions</code>.</li><li>Press <b>↻ Reload</b> on TaskTime.<figure><img src="../assets/shots/guide/ext-3-reload.png" alt="" loading="lazy"><figcaption>The ↻ Reload button on the TaskTime card.</figcaption></figure></li><li><b>Reload</b> Redstone and Ximble (<kbd>F5</kbd>).</li><li>Check Settings → Version. Your records stay.</li></ol>
 <div class="tip">Forgot step 5? The report shows a <b>“Finish updating”</b> bar.</div></section>
 
 <section id="en-backup"><h2><span class="n">13</span>Backup and moving</h2>
