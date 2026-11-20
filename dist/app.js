@@ -3,7 +3,7 @@ const ico={bell:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" str
 tab:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><circle cx="7" cy="6.5" r=".5" fill="currentColor"/></svg>',
 pop:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="11" y="13" width="8" height="6" rx="1"/></svg>'};
 const T={bg:{
-nav:[['signals','Сигнали'],['postqa','Post QA'],['schedule','График'],['report','Отчет'],['install','Инсталиране'],['faq','Въпроси']],
+nav:[['Instrucitons/','Ръководство'],['signals','Сигнали'],['postqa','Post QA'],['schedule','График'],['report','Отчет'],['install','Инсталиране'],['faq','Въпроси']],
 pill:'Добавка за Chrome и Opera',h1:'Никога не пропускай <em>задача</em>.',
 lead:'TaskTime те вика в момента, в който излезе нова задача в Redstone — със звук, цветна точка на таба и известие на екрана. Работиш в друг прозорец спокойно, без да проверяваш на всяка минута.',
 cta:'Свали TaskTime',cta2:'Виж как работи',note:'Безплатно · без регистрация · данните остават в твоя браузър',
@@ -40,7 +40,7 @@ faq:[['Как TaskTime взима графика ми?','Отвори My Schedul
 finH:'Спокойна работа. Нито една пропусната задача.',finP:'Инсталирането отнема минута.',
 foot:'TaskTime · не е свързан с Google, Opera, Second Spectrum или Ximble.',lb:'Затвори'},
 en:{
-nav:[['signals','Alerts'],['postqa','Post QA'],['schedule','Schedule'],['report','Report'],['install','Install'],['faq','FAQ']],
+nav:[['Instrucitons/','Guide'],['signals','Alerts'],['postqa','Post QA'],['schedule','Schedule'],['report','Report'],['install','Install'],['faq','FAQ']],
 pill:'Extension for Chrome and Opera',h1:'Never miss a <em>task</em>.',
 lead:'TaskTime calls you the moment a new task appears in Redstone — with a sound, a coloured dot on the tab and an on-screen notification. Work in another window with peace of mind, no checking every minute.',
 cta:'Download TaskTime',cta2:'See how it works',note:'Free · no sign-up · your data stays in your browser',
@@ -78,11 +78,11 @@ finH:'Calm work. Not a single missed task.',finP:'Installation takes a minute.',
 foot:'TaskTime · not affiliated with Google, Opera, Second Spectrum or Ximble.',lb:'Close'}};
 const browsers=[['Chrome','Google Chrome','chrome'],['Opera','Opera','opera']];
 function render(lang){const t=T[lang]||T.bg;document.documentElement.lang=lang;document.title=lang==='bg'?'TaskTime — никога не пропускай задача':'TaskTime — never miss a task';
- document.getElementById('nav').innerHTML=t.nav.map(([id,l])=>`<a href="#${id}">${l}</a>`).join('');
+ document.getElementById('nav').innerHTML=t.nav.map(([id,l])=>`<a href="${id.includes('/')?id:'#'+id}">${l}</a>`).join('');
  document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.lang===lang)));
  const s=n=>`assets/shots/${n}-${lang}.png`;const li=a=>a.map(x=>`<li>${x}</li>`).join('');
  document.getElementById('main').innerHTML=`<div class="wrap">
- <div class="hero" id="top"><div><span class="pill"><i></i>${t.pill}</span><h1>${t.h1}</h1><p class="lead">${t.lead}</p><div class="cta"><a class="btn" href="#install">↓ ${t.cta}</a><a class="btn ghost" href="#signals">${t.cta2}</a></div><p class="note">${t.note}</p></div>
+ <div class="hero" id="top"><div><span class="pill"><i></i>${t.pill}</span><h1>${t.h1}</h1><p class="lead">${t.lead}</p><div class="cta"><a class="btn" href="#install">↓ ${t.cta}</a><a class="btn ghost" href="#signals">${t.cta2}</a></div><p class="note">${t.note} · <a href="Instrucitons/">${lang==='bg'?'Пълно ръководство →':'Full user guide →'}</a></p></div>
  <div class="visual"><img class="tabs" src="assets/shots/tabs.png" alt="" width="620"><img class="toast" src="${s('notify')}" alt=""></div></div>
  <div class="values">${t.values.map(([i,h,p])=>`<div class="value reveal"><div class="ico">${ico[i]}</div><h3>${h}</h3><p>${p}</p></div>`).join('')}</div></div>
  <section id="signals"><div class="wrap"><div class="head reveal"><span class="eyebrow">${t.sigEy}</span><h2>${t.sigH}</h2><p>${t.sigP}</p></div>

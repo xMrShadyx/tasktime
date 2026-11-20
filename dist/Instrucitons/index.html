@@ -1,0 +1,351 @@
+<!doctype html><html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TaskTime — Ръководство</title><meta name="description" content="Пълно ръководство за TaskTime: инсталиране, първоначална настройка, работа през смяната, сигнали, Post QA, график от Ximble, отчет, обновяване, архив и решаване на проблеми.">
+<link rel="icon" href="../assets/tasktime.svg" type="image/svg+xml"><link rel="stylesheet" href="../style.css?v=202611200955">
+<style>
+.guide{display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;max-width:1160px;margin:0 auto;padding:40px 20px 80px}
+.toc{position:sticky;top:84px;align-self:start;max-height:calc(100vh - 100px);overflow:auto;font-size:14px}
+.toc b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.toc a{display:block;text-decoration:none;color:var(--muted);padding:5px 10px;border-radius:7px;border-left:2px solid transparent}.toc a:hover{color:var(--ink);background:var(--soft)}.toc a.on{color:var(--ink);border-left-color:var(--accent);background:var(--soft)}
+.guide>*{min-width:0}@media (max-width:900px){.guide{grid-template-columns:1fr}.toc{position:static;max-height:none}}
+.g h1{font-size:clamp(32px,4.4vw,48px);font-weight:800;letter-spacing:-.03em;margin:8px 0 12px}
+.g .intro{font-size:18px;color:var(--muted);max-width:720px}
+.g section{border-top:1px solid var(--line);padding:44px 0 8px}
+.g h2{font-size:28px;font-weight:750;margin:0 0 6px;display:flex;align-items:baseline;gap:12px}.g h2 .n{font-size:14px;color:var(--accent);font-weight:700;min-width:28px}
+.g h3{font-size:18px;margin:28px 0 8px}
+.g p,.g li{color:var(--ink2)}.g .glead{color:var(--muted);margin-bottom:18px}
+.g ol.gsteps{counter-reset:s;list-style:none;padding:0;margin:14px 0 20px;display:grid;gap:10px}
+.g ol.gsteps>li{counter-increment:s;position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 56px}
+.g ol.gsteps>li::before{content:counter(s);position:absolute;left:14px;top:12px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:13px}
+.g ol.gsteps>li b{color:var(--ink)}
+.g ul{padding-left:20px}.g ul li{margin:6px 0}
+.g .tbl{overflow:auto;margin:14px 0 20px;border:1px solid var(--line);border-radius:12px}.g table{width:100%;border-collapse:collapse;font-size:14px;background:var(--card)}.g th,.g td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}.g th{background:var(--soft);font-size:12px;color:var(--muted);font-weight:600}.g tr:last-child td{border-bottom:0}
+.g figure{margin:16px 0 22px}.g figure img{width:100%;height:auto}.g figure img{border-radius:12px;border:1px solid var(--line);box-shadow:var(--shadow);background:var(--card)}.g figcaption{font-size:13px;color:var(--muted);margin-top:8px}
+.g .tip,.g .note2,.g .danger{border-radius:12px;padding:14px 18px;margin:16px 0;font-size:15px}.g .tip{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}.g .note2{background:var(--soft);border:1px solid var(--line)}
+.g .danger{background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;color:#7f1d1d}@media (prefers-color-scheme:dark){.g .danger{background:#2a1214;border-color:#4c1d1d;color:#fecaca}}
+.g kbd{font:12px ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;background:var(--card)}
+.g .faq details{border-bottom:1px solid var(--line)}.g .faq summary{cursor:pointer;font-weight:600;padding:14px 0}.g .faq p{margin:0 0 14px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:14px}.back:hover{color:var(--ink)}
+[data-l]{display:none!important}html[lang=bg] .guide[data-l=bg],html[lang=en] .guide[data-l=en]{display:grid!important}html[lang=bg] :not(.guide)[data-l=bg],html[lang=en] :not(.guide)[data-l=en]{display:inline!important}
+</style></head><body>
+<header class="top"><a class="brand" href="../"><img src="../assets/tasktime.svg" alt="">TaskTime</a><nav id="nav"><a href="../" data-l="bg">← Към сайта</a><a href="../" data-l="en">← Back to site</a></nav>
+<div class="seg" role="radiogroup" aria-label="Language"><button data-lang="bg" role="radio">БГ</button><button data-lang="en" role="radio">EN</button></div></header>
+
+<!-- ============================ БЪЛГАРСКИ ============================ -->
+<div class="guide" data-l="bg">
+<aside class="toc"><b>Съдържание</b>
+<a href="#bg-req">1. Какво ти трябва</a><a href="#bg-install">2. Инсталиране</a><a href="#bg-setup">3. Първоначална настройка</a><a href="#bg-shift">4. Работа през смяната</a><a href="#bg-tasks">5. Как се записват задачите</a><a href="#bg-alerts">6. Сигнали и известия</a><a href="#bg-postqa">7. Post QA</a><a href="#bg-schedule">8. График от Ximble</a><a href="#bg-report">9. Отчетът</a><a href="#bg-edit">10. Поправка на смени</a><a href="#bg-settings">11. Настройки</a><a href="#bg-update">12. Обновяване</a><a href="#bg-backup">13. Архив и преместване</a><a href="#bg-trouble">14. Решаване на проблеми</a><a href="#bg-privacy">15. Поверителност</a>
+</aside>
+<main class="g">
+<a class="back" href="../">← Към сайта</a>
+<h1>Ръководство за TaskTime</h1>
+<p class="intro">Всичко стъпка по стъпка: от инсталирането до ежедневната работа, обновяването и решаването на проблеми. Версия 0.1.26.</p>
+
+<section id="bg-req"><h2><span class="n">01</span>Какво ти трябва</h2>
+<ul>
+<li><b>Google Chrome</b> или <b>Opera</b> на компютър (Windows, macOS или Linux).</li>
+<li>Достъп до <b>Redstone</b> (<code>redstone.secondspectrum.com</code>) и <b>Ximble</b> (<code>app.ximble.com</code>).</li>
+<li>Двата сайта трябва да се отварят в <b>същия браузър и профил</b>, в който е инсталиран TaskTime.</li>
+<li>Около 2 минути за инсталиране.</li>
+</ul></section>
+
+<section id="bg-install"><h2><span class="n">02</span>Инсталиране</h2>
+<p class="glead">TaskTime не е в магазина за добавки, затова се зарежда ръчно от папка. Прави се веднъж.</p>
+<div class="danger"><b>⚠ Важно:</b> браузърът зарежда TaskTime директно от папката, която избереш. Ако я изтриеш, добавката спира. Ако я преместиш или премахнеш добавката, записите ти се губят. Сложи я на място, където няма да я пипаш, например <code>Documents\TaskTime</code>.</div>
+<ol class="gsteps">
+<li><b>Свали файла</b> за своя браузър от <a href="../#install">сайта</a>: „Свали“ до Google Chrome или до Opera.</li>
+<li><b>Създай папка</b>, например <code>Documents\TaskTime</code>.</li>
+<li><b>Разархивирай</b> сваления ZIP в тази папка: десен бутон → <b>Extract All</b> (Извлечи всички) → избери папката. Вътре трябва да има файл <code>manifest.json</code>.</li>
+<li><b>Отвори страницата с разширения:</b> напиши в адресната лента <code>chrome://extensions</code> (Chrome) или <code>opera://extensions</code> (Opera) и натисни <kbd>Enter</kbd>.</li>
+<li><b>Включи „Developer mode“</b> (Режим за програмисти) — ключ горе вдясно в Chrome, горе в Opera.</li>
+<li>Натисни <b>„Load unpacked“</b> (Зареждане на разопаковано) и избери папката от стъпка 2 — тази, в която е <code>manifest.json</code>, не самия ZIP.</li>
+<li><b>Закачи иконката:</b> натисни иконката-пъзел в лентата на браузъра → карфицата до <b>TaskTime</b>. Иконката (часовник с отметка) остава винаги видима.</li>
+<li><b>Презареди</b> отворените табове с Redstone и Ximble (<kbd>F5</kbd>). Готово.</li>
+</ol>
+<div class="tip">Ако браузърът при стартиране покаже „Disable developer mode extensions“ — натисни <b>Cancel / Отказ</b>. Това е нормално за добавки, заредени от папка.</div>
+</section>
+
+<section id="bg-setup"><h2><span class="n">03</span>Първоначална настройка</h2>
+<p class="glead">Отнема минута и се прави веднъж. Отчетът се отваря с клик върху иконката на TaskTime.</p>
+<ol class="gsteps">
+<li><b>Избери език:</b> горе вдясно в отчета — <b>БГ | EN</b>. Езикът важи за отчета, въпросите и известията.</li>
+<li><b>Пробвай звука:</b> отчет → <b>Настройки</b> → „Пробвай звука“. Ако не чуваш нищо, виж раздел 14.</li>
+<li><b>Включи известието в системата</b> (по желание): Настройки → „Известие в системата“ → разреши в браузъра.</li>
+<li><b>Запиши папката:</b> Настройки → „Версия“ → „Отвори разширенията“ → на страницата на TaskTime копирай пътя до <b>„Loaded from“</b> → постави го в „Папка на добавката“ → „Запази“.</li>
+<li><b>Вземи графика:</b> отвори Ximble → <b>My Schedule</b> → изглед <b>Week</b>. Долу вдясно ще видиш „✓ Графикът е взет“. Повече в раздел 8.</li>
+<li>Дръж <b>Ximble отворен</b> в отделен таб през цялата смяна.</li>
+</ol>
+</section>
+
+<section id="bg-shift"><h2><span class="n">04</span>Работа през смяната</h2>
+<ol class="gsteps">
+<li><b>Clock In в Ximble.</b> TaskTime вижда, че си на смяна; иконката става 🟢. Ако има график за деня, взима края от него; ако няма — пита „До колко часа е смяната ти?“.</li>
+<li><b>Работиш в Redstone</b> както винаги. Задачите се записват сами (раздел 5).</li>
+<li><b>Почивка:</b> Clock Out в Ximble → въпрос „Почивка или приключваш работа?“ → „Почивка“. Иконата става 🟠. При Clock In смяната продължава.</li>
+<li><b>Втора смяна в същия ден:</b> Clock In след края на първата смяна започва <b>нова смяна</b> — не се брои за overtime.</li>
+<li><b>Край:</b> Clock Out → „Приключвам“. Иконата става 🔴.</li>
+<li><b>Ако планираният край мине</b>, а още си на смяна: „Още ли работиш?“ → „Продължавам с overtime“ или „Приключвам“ (тогава TaskTime напомня да направиш Clock Out).</li>
+</ol>
+<figure><img src="../assets/shots/panel-bg.png" alt="" style="max-width:380px"><figcaption>Въпросите излизат в горния ляв ъгъл на Redstone и Ximble и стоят, докато отговориш. Часът се записва точно, дори да отговориш по-късно.</figcaption></figure>
+<div class="tbl"><table><tr><th>Иконка на TaskTime</th><th>Значение</th></tr><tr><td>🟢</td><td>на смяна</td></tr><tr><td>🟠</td><td>почивка</td></tr><tr><td>🔴</td><td>извън смяна</td></tr><tr><td>число</td><td>чакащи въпроси</td></tr><tr><td>!</td><td>има задачи „За преглед“</td></tr><tr><td>↑</td><td>има нова версия</td></tr></table></div>
+</section>
+
+<section id="bg-tasks"><h2><span class="n">05</span>Как се записват задачите</h2>
+<ol class="gsteps">
+<li><b>Отваряш задача</b> в Redstone — TaskTime я разпознава по адреса (всяка лига: uefa, efl, cbf1, wnba, ncaa…; всеки тип: ball, player, single_player, reid…).</li>
+<li><b>Работиш</b> — кликове, Auto Advance, презареждане (<kbd>F5</kbd>) са част от същата задача.</li>
+<li><b>Натискаш бутон за край:</b> <b>Finish &amp; Next</b>, <b>Finish &amp; Exit</b>, <b>Clear Samples &amp; Next</b>, <b>Clear Samples &amp; Exit</b> или <b>Incorrect Player</b>.</li>
+<li><b>Продължаваш</b> към следваща задача, към екрана за чакане или затваряш таба — задачата е <b>завършена</b>.</li>
+</ol>
+<div class="tbl"><table><tr><th>Статус</th><th>Кога</th><th>Влиза ли в статистиката</th></tr>
+<tr><td><b>Завършена</b></td><td>натиснат бутон за край и напускане до 2 минути след това</td><td>да</td></tr>
+<tr><td><b>За преглед</b></td><td>без бутон за край, прекъсване над половин минута, грешка от Redstone, същата задача в два таба</td><td>само ако я потвърдиш</td></tr>
+<tr><td><b>Премахната от модератор</b></td><td>Redstone показва „Task no longer available“</td><td>не</td></tr>
+<tr><td><b>Изключена</b></td><td>ти си я изключил от „За преглед“</td><td>не</td></tr></table></div>
+<p>Етикети в историята: <b>Post QA</b> (раздел 7) и <b>Incorrect Player</b>.</p>
+</section>
+
+<section id="bg-alerts"><h2><span class="n">06</span>Сигнали и известия</h2>
+<p class="glead">Табът с Redstone получава цветна точка и надпис, а TaskTime пуска кратък сигнал.</p>
+<figure><img src="../assets/shots/tabs.png" alt="" style="max-width:620px"></figure>
+<div class="tbl"><table><tr><th></th><th>Кога</th><th>На таба</th><th>Звук</th><th>Спира</th></tr>
+<tr><td>🟢</td><td>нова задача, а не гледаш таба с Redstone</td><td>„New task“</td><td>1 сигнал</td><td>като се върнеш в таба</td></tr>
+<tr><td>🟠</td><td>Redstone пита „Are you still active?“</td><td>„Not Active 13 sec.“</td><td>1 / сек.</td><td>когато прозорецът изчезне</td></tr>
+<tr><td>🔴</td><td>остават 5 секунди</td><td>„Not Active 4 sec.“</td><td>2 / сек.</td><td>когато прозорецът изчезне</td></tr></table></div>
+<h3>Известие в системата</h3>
+<figure><img src="../assets/shots/notify-bg.png" alt="" style="max-width:380px"><figcaption>По желание: при нова задача излиза и изскачащо съобщение с лигата и типа. Клик по него те връща в Redstone.</figcaption></figure>
+<ol class="gsteps"><li>Отчет → <b>Настройки</b> → „Известие в системата“ → включи.</li><li>Браузърът пита за разрешение → <b>Allow / Разреши</b>.</li><li>Ако пак не излиза: провери дали Windows не е в режим „Не безпокой“ (Focus Assist).</li></ol>
+</section>
+
+<section id="bg-postqa"><h2><span class="n">07</span>Post QA</h2>
+<p class="glead">Post QA задачите се отбелязват с червен етикет в отчета и имат отделен ред в статистиката.</p>
+<h3>Подсказка за съседните chunk-ове</h3>
+<ol class="gsteps"><li>Отвориш Post QA задача — под съседните chunk-ове, в които има задача (тъмносив бутон), се появява <b>оранжева линия</b>.</li><li>Кликнеш на chunk-а — линията става <b>зелена</b>.</li><li>Chunk-ове без задача (светлосиви) и средният бутон нямат линия.</li></ol>
+<figure><img src="../assets/shots/postqa-1.png" alt="" style="max-width:520px"><figcaption>2171 и 2173 чакат проверка.</figcaption></figure>
+<figure><img src="../assets/shots/postqa-2.png" alt="" style="max-width:520px"><figcaption>2171 е проверен.</figcaption></figure>
+<p>Само напомня — нищо не спира. Изключва се от Настройки → <b>Подсказки</b>.</p>
+</section>
+
+<section id="bg-schedule"><h2><span class="n">08</span>График от Ximble</h2>
+<ol class="gsteps">
+<li>Отвори Ximble → <b>My Schedule</b>.</li>
+<li>Избери изглед <b>Week</b> — той показва всички смени. В изглед <b>Month</b> Ximble крие част от смените зад „1 more…“.</li>
+<li>Изчакай 2–3 секунди. Долу вдясно излиза „TaskTime · Чета графика…“, после „✓ Графикът е взет — N смени“.</li>
+<li>За следващата седмица — превключи седмицата в Ximble; TaskTime я прочита сам.</li>
+</ol>
+<figure><img src="../assets/shots/ximble-toast-bg.png" alt="" style="max-width:460px"></figure>
+<ul><li>Взимат се само <b>потвърдените</b> смени (кафяви, с отметка). Сивите (непотвърдени) и „Time off“ се пропускат.</li><li>Поддържат се <b>няколко смени на ден</b> и <b>нощни смени</b> (до следващия ден).</li><li>TaskTime само чете страницата — нищо не натиска.</li></ul>
+<h3>Ръчни промени</h3>
+<ol class="gsteps"><li>Отчет → <b>Смени</b> → разгъни „График“.</li><li>До деня натисни <b>„Промени“</b> (друг час), <b>„Почивен“</b> или <b>„Махни промяната“</b>.</li><li>Натисни <b>„Запази графика“</b>. Ръчните промени имат предимство пред Ximble.</li></ol>
+<h3>Сравнение</h3>
+<figure><img src="../assets/shots/shifts-bg.png" alt=""><figcaption>Всяка смяна показва графика, закъснение или ранно начало, край навреме / по-рано / overtime и работено спрямо планираното. Толеранс: 5 минути.</figcaption></figure>
+<p>Ако има планирана смяна без Clock In, най-горе в „Смени“ излиза <b>„Планирани смени без Clock In“</b>.</p>
+</section>
+
+<section id="bg-report"><h2><span class="n">09</span>Отчетът</h2>
+<p class="glead">Клик върху иконката на TaskTime. Горе: статус (на смяна / почивка / извън смяна) и <b>БГ | EN</b>.</p>
+<div class="tbl"><table><tr><th>Таб</th><th>Какво има</th></tr>
+<tr><td><b>Днес</b></td><td>завършени задачи, време в задачи, средно на задача, работено време; задачи по тип; текуща смяна; последни задачи</td></tr>
+<tr><td><b>Статистика</b></td><td>„Днес / 7 дни / Този месец“ или период; по тип: брой, най-бърза, най-бавна, средно, общо; ред „Общо“; <b>Свали CSV</b></td></tr>
+<tr><td><b>Смени</b></td><td>график (раздел 8), всяка смяна със сравнение, бутон „Редактирай“</td></tr>
+<tr><td><b>За преглед</b></td><td>неясните задачи с причина; <b>Потвърди</b> или <b>Изключи</b></td></tr>
+<tr><td><b>История</b></td><td>по дни; 25/50/100 на страница; филтри Всички · Обикновени · Post QA · За преглед; търсене по тип, лига, ID</td></tr>
+<tr><td><b>Настройки</b></td><td>раздел 11</td></tr></table></div>
+<figure><img src="../assets/shots/dash-today-bg.png" alt=""><figcaption>Таб „Днес“.</figcaption></figure>
+<figure><img src="../assets/shots/history-bg.png" alt=""><figcaption>Таб „История“.</figcaption></figure>
+</section>
+
+<section id="bg-edit"><h2><span class="n">10</span>Поправка на смени</h2>
+<ol class="gsteps">
+<li>Отчет → <b>Смени</b> → <b>„Редактирай“</b> на смяната.</li>
+<li>Промени <b>начало</b>, <b>край</b> (празно = продължава, само за текущата), <b>планиран край</b>.</li>
+<li><b>Почивки:</b> промени часа, <b>×</b> за изтриване, <b>„+ Почивка“</b> за нова.</li>
+<li>По желание — ключ „Overtime е потвърден“.</li>
+<li><b>Запази.</b> Работеното време се преизчислява. Смяната получава етикет „ръчно редактирана“.</li>
+<li>Грешно създадена смяна → <b>„Изтрий смяната“</b> (задачите остават).</li>
+</ol>
+<div class="note2">Почивка, по-кратка от минута, се маха автоматично. Ако нещо е грешно, съобщението казва коя почивка е проблемна и я оцветява в червено.</div>
+</section>
+
+<section id="bg-settings"><h2><span class="n">11</span>Настройки</h2>
+<figure><img src="../assets/shots/dash-settings-bg.png" alt=""></figure>
+<div class="tbl"><table><tr><th>Раздел</th><th>Какво правиш</th></tr>
+<tr><td><b>Сигнал за нова задача</b></td><td>звук вкл./изкл., сила, „Пробвай звука“, известие в системата (виж „?“)</td></tr>
+<tr><td><b>Подсказки</b></td><td>вкл./изкл. линиите при Post QA</td></tr>
+<tr><td><b>Лиги и типове задачи</b></td><td>добавяш нова лига, тип или страница, която не е задача. Ако TaskTime види непознат тип, предлага „Добави като тип“.</td></tr>
+<tr><td><b>Версия</b></td><td>инсталирана версия, „Провери сега“, стъпки за обновяване, „Отвори разширенията“</td></tr>
+<tr><td><b>Папка на добавката</b></td><td>записваш пътя, за да го имаш под ръка</td></tr>
+<tr><td><b>Твоите данни</b></td><td>„Свали архив (JSON)“ и „Възстанови от архив“</td></tr></table></div>
+</section>
+
+<section id="bg-update"><h2><span class="n">12</span>Обновяване</h2>
+<p class="glead">Когато има нова версия, на иконката се появява <b>↑</b>, а в отчета — лента с бутон към сайта.</p>
+<ol class="gsteps">
+<li>Отчет → Настройки → <b>„Провери сега“</b> (по желание — проверката става и сама няколко пъти на ден).</li>
+<li><b>Свали</b> новия ZIP от сайта.</li>
+<li>Разархивирай го <b>върху същата папка</b> → при въпроса избери <b>Replace</b> (замени файловете).</li>
+<li>Отвори <code>chrome://extensions</code> / <code>opera://extensions</code> (или Настройки → „Отвори разширенията“).</li>
+<li>На картата на TaskTime натисни <b>↻ Reload</b> — в Chrome е долу вдясно, в Opera до името.</li>
+<li><b>Презареди</b> табовете с Redstone и Ximble (<kbd>F5</kbd>).</li>
+<li>Провери: Настройки → Версия показва новата версия, а ↑ го няма. Записите остават.</li>
+</ol>
+<div class="tip">Ако забравиш стъпка 5, отчетът показва лента <b>„Довърши обновяването“</b> с бутон към страницата с разширения.</div>
+<div class="danger">Не премахвай добавката и не я зареждай от нова папка при обновяване — така се губят записите.</div>
+</section>
+
+<section id="bg-backup"><h2><span class="n">13</span>Архив и преместване</h2>
+<h3>Архив</h3>
+<ol class="gsteps"><li>Отчет → Настройки → „Твоите данни“ → <b>„Свали архив (JSON)“</b>.</li><li>Пази файла на сигурно място. Препоръчително е от време на време.</li></ol>
+<h3>Преместване на друго място или компютър</h3>
+<ol class="gsteps"><li>Свали архив (горе).</li><li>Инсталирай TaskTime на новото място (раздел 2).</li><li>Отчет → Настройки → <b>„Възстанови от архив“</b> → избери файла → потвърди.</li><li>Ако си сменил папката — премахни старата добавка от страницата с разширения едва след това.</li></ol>
+</section>
+
+<section id="bg-trouble"><h2><span class="n">14</span>Решаване на проблеми</h2>
+<div class="faq">
+<details><summary>Задачите не се записват</summary><p>1) Презареди таба с Redstone (<kbd>F5</kbd>) — особено след обновяване или Reload. 2) Провери, че Redstone е в същия браузър и профил. 3) Ако Redstone е добавил нов тип задача — Настройки → „Лиги и типове задачи“.</p></details>
+<details><summary>Не чувам звук</summary><p>Настройки → „Пробвай звука“. Провери ключа „Звуков сигнал“, силата и дали браузърът/табът не е заглушен. Зеленият сигнал звучи само ако <b>не гледаш</b> таба с Redstone.</p></details>
+<details><summary>Не излиза известие на екрана</summary><p>Включи го в Настройки и разреши в браузъра. Провери „Не безпокой“ / Focus Assist в Windows и известията за браузъра в системните настройки.</p></details>
+<details><summary>Графикът от Ximble не се взима</summary><p>Презареди Ximble (<kbd>F5</kbd>), отвори My Schedule → <b>Week</b> и изчакай 3 секунди. Ако не се появи съобщението долу вдясно — провери версията в Настройки.</p></details>
+<details><summary>Втората смяна липсва в графика</summary><p>В изглед Month Ximble я крие зад „more…“. Отвори изглед <b>Week</b>.</p></details>
+<details><summary>Задача отиде „За преглед“, а я направих нормално</summary><p>Отчет → „За преглед“ → <b>Потвърди</b>. Причината е изписана до задачата.</p></details>
+<details><summary>Иконката показва ↑, а вече обнових</summary><p>Натисни <b>↻ Reload</b> на TaskTime в страницата с разширения.</p></details>
+<details><summary>Сгреших планирания край или почивка</summary><p>Отчет → Смени → „Редактирай“ (раздел 10).</p></details>
+<details><summary>Цветната точка на таба остана</summary><p>Кликни в страницата на Redstone. Ако остане — <kbd>F5</kbd>.</p></details>
+<details><summary>Сайтът показва стара информация</summary><p>Презареди с <kbd>Ctrl</kbd>+<kbd>F5</kbd>.</p></details>
+</div></section>
+
+<section id="bg-privacy"><h2><span class="n">15</span>Поверителност</h2>
+<ul><li>Всички записи са <b>само в твоя браузър</b>. Няма сървър, акаунт или анализ.</li><li>TaskTime <b>само наблюдава</b> — не натиска бутони и не променя нищо в Redstone или Ximble. Сменя само иконката и надписа на таба при сигнал и показва линиите при Post QA.</li><li>Единствената връзка навън е проверката за нова версия на този сайт.</li></ul>
+<p class="note2">TaskTime е личен отчет. Не замества официалното отчитане. Не е свързан с Google, Opera, Second Spectrum или Ximble.</p>
+</section>
+</main></div>
+
+<!-- ============================ ENGLISH ============================ -->
+<div class="guide" data-l="en">
+<aside class="toc"><b>Contents</b>
+<a href="#en-req">1. What you need</a><a href="#en-install">2. Installation</a><a href="#en-setup">3. First-time setup</a><a href="#en-shift">4. During your shift</a><a href="#en-tasks">5. How tasks are recorded</a><a href="#en-alerts">6. Alerts and notifications</a><a href="#en-postqa">7. Post QA</a><a href="#en-schedule">8. Schedule from Ximble</a><a href="#en-report">9. The report</a><a href="#en-edit">10. Fixing shifts</a><a href="#en-settings">11. Settings</a><a href="#en-update">12. Updating</a><a href="#en-backup">13. Backup and moving</a><a href="#en-trouble">14. Troubleshooting</a><a href="#en-privacy">15. Privacy</a>
+</aside>
+<main class="g">
+<a class="back" href="../">← Back to site</a>
+<h1>TaskTime user guide</h1>
+<p class="intro">Everything step by step: installation, daily work, updating and troubleshooting. Version 0.1.26.</p>
+
+<section id="en-req"><h2><span class="n">01</span>What you need</h2>
+<ul><li><b>Google Chrome</b> or <b>Opera</b> on a computer (Windows, macOS or Linux).</li><li>Access to <b>Redstone</b> (<code>redstone.secondspectrum.com</code>) and <b>Ximble</b> (<code>app.ximble.com</code>).</li><li>Both sites open in the <b>same browser and profile</b> where TaskTime is installed.</li><li>About 2 minutes to install.</li></ul></section>
+
+<section id="en-install"><h2><span class="n">02</span>Installation</h2>
+<p class="glead">TaskTime is not in an extension store, so it is loaded manually from a folder. You do this once.</p>
+<div class="danger"><b>⚠ Important:</b> the browser loads TaskTime directly from the folder you choose. Delete it and the extension stops. Move it or remove the extension and your records are lost. Put it where you will not touch it, e.g. <code>Documents\TaskTime</code>.</div>
+<ol class="gsteps">
+<li><b>Download</b> the file for your browser from the <a href="../#install">site</a>.</li>
+<li><b>Create a folder</b>, e.g. <code>Documents\TaskTime</code>.</li>
+<li><b>Extract</b> the ZIP into it: right-click → <b>Extract All</b> → choose the folder. It must contain <code>manifest.json</code>.</li>
+<li><b>Open the extensions page:</b> type <code>chrome://extensions</code> (Chrome) or <code>opera://extensions</code> (Opera) and press <kbd>Enter</kbd>.</li>
+<li>Turn on <b>Developer mode</b> — top right in Chrome, at the top in Opera.</li>
+<li>Click <b>Load unpacked</b> and choose the folder from step 2 — the one with <code>manifest.json</code>, not the ZIP.</li>
+<li><b>Pin the icon:</b> click the puzzle icon in the toolbar → the pin next to <b>TaskTime</b>.</li>
+<li><b>Reload</b> any open Redstone and Ximble tabs (<kbd>F5</kbd>). Done.</li>
+</ol>
+<div class="tip">If the browser shows “Disable developer mode extensions” at start-up, click <b>Cancel</b>. This is normal for extensions loaded from a folder.</div>
+</section>
+
+<section id="en-setup"><h2><span class="n">03</span>First-time setup</h2>
+<ol class="gsteps">
+<li><b>Language:</b> top right of the report — <b>БГ | EN</b>. It applies to the report, questions and notifications.</li>
+<li><b>Test the sound:</b> report → <b>Settings</b> → “Test sound”.</li>
+<li><b>System notification</b> (optional): Settings → “System notification” → allow in the browser.</li>
+<li><b>Save the folder path:</b> Settings → “Version” → “Open extensions” → copy the path next to <b>“Loaded from”</b> → paste into “Extension folder” → “Save”.</li>
+<li><b>Get your schedule:</b> Ximble → <b>My Schedule</b> → <b>Week</b> view. You will see “✓ Schedule read” bottom right (section 8).</li>
+<li>Keep <b>Ximble open</b> in its own tab during the shift.</li>
+</ol></section>
+
+<section id="en-shift"><h2><span class="n">04</span>During your shift</h2>
+<ol class="gsteps">
+<li><b>Clock In in Ximble.</b> The icon turns 🟢. With a schedule, the end time is taken from it; otherwise TaskTime asks “What time does your shift end?”.</li>
+<li><b>Work in Redstone</b> as usual. Tasks are recorded automatically (section 5).</li>
+<li><b>Break:</b> Clock Out → “Taking a break or finishing work?” → “Take a break”. Icon 🟠. Clock In resumes the shift.</li>
+<li><b>Second shift the same day:</b> clocking in after the first shift ended starts a <b>new shift</b> — not overtime.</li>
+<li><b>End:</b> Clock Out → “Finish work”. Icon 🔴.</li>
+<li><b>If the planned end passes</b> while clocked in: “Still working?” → “Continue with overtime” or “Finish work”.</li>
+</ol>
+<figure><img src="../assets/shots/panel-en.png" alt="" style="max-width:380px"><figcaption>Questions appear top-left in Redstone and Ximble and stay until answered. The event time is kept even if you answer later.</figcaption></figure>
+<div class="tbl"><table><tr><th>TaskTime icon</th><th>Meaning</th></tr><tr><td>🟢</td><td>on shift</td></tr><tr><td>🟠</td><td>on a break</td></tr><tr><td>🔴</td><td>off shift</td></tr><tr><td>number</td><td>pending questions</td></tr><tr><td>!</td><td>tasks to review</td></tr><tr><td>↑</td><td>new version available</td></tr></table></div>
+</section>
+
+<section id="en-tasks"><h2><span class="n">05</span>How tasks are recorded</h2>
+<ol class="gsteps">
+<li><b>Open a task</b> — recognised by its address (any league, any type).</li>
+<li><b>Work</b> — clicks, Auto Advance and reloads are part of the same task.</li>
+<li><b>Press a finish button:</b> <b>Finish &amp; Next/Exit</b>, <b>Clear Samples &amp; Next/Exit</b> or <b>Incorrect Player</b>.</li>
+<li><b>Move on</b> — the task is <b>completed</b>.</li>
+</ol>
+<div class="tbl"><table><tr><th>Status</th><th>When</th><th>In statistics</th></tr>
+<tr><td><b>Completed</b></td><td>finish button, then leaving within 2 minutes</td><td>yes</td></tr>
+<tr><td><b>To review</b></td><td>no finish button, a pause over half a minute, a Redstone error, same task in two tabs</td><td>only if you confirm</td></tr>
+<tr><td><b>Removed by moderator</b></td><td>Redstone shows “Task no longer available”</td><td>no</td></tr>
+<tr><td><b>Excluded</b></td><td>you excluded it from “To review”</td><td>no</td></tr></table></div>
+</section>
+
+<section id="en-alerts"><h2><span class="n">06</span>Alerts and notifications</h2>
+<figure><img src="../assets/shots/tabs.png" alt="" style="max-width:620px"></figure>
+<div class="tbl"><table><tr><th></th><th>When</th><th>On the tab</th><th>Sound</th><th>Stops</th></tr>
+<tr><td>🟢</td><td>new task while you are not on the Redstone tab</td><td>“New task”</td><td>1 chime</td><td>when you return</td></tr>
+<tr><td>🟠</td><td>“Are you still active?”</td><td>“Not Active 13 sec.”</td><td>1 / s</td><td>dialog closes</td></tr>
+<tr><td>🔴</td><td>5 seconds left</td><td>“Not Active 4 sec.”</td><td>2 / s</td><td>dialog closes</td></tr></table></div>
+<figure><img src="../assets/shots/notify-en.png" alt="" style="max-width:380px"><figcaption>Optional system notification: Settings → “System notification” → allow. Clicking it takes you back to Redstone.</figcaption></figure>
+</section>
+
+<section id="en-postqa"><h2><span class="n">07</span>Post QA</h2>
+<ol class="gsteps"><li>Open a Post QA task — an <b>orange line</b> appears under neighbouring chunks that have a task (dark grey).</li><li>Click a chunk — the line turns <b>green</b>.</li><li>Chunks without a task (light grey) and the middle button get no line.</li></ol>
+<figure><img src="../assets/shots/postqa-1.png" alt="" style="max-width:520px"></figure><figure><img src="../assets/shots/postqa-2.png" alt="" style="max-width:520px"></figure>
+<p>Post QA tasks get a red label and their own statistics row. The hint can be turned off in Settings → <b>Tips</b>.</p></section>
+
+<section id="en-schedule"><h2><span class="n">08</span>Schedule from Ximble</h2>
+<ol class="gsteps"><li>Ximble → <b>My Schedule</b>.</li><li>Choose <b>Week</b> view — it shows every shift. Month view hides some behind “1 more…”.</li><li>Wait 2–3 seconds: “TaskTime · Reading the schedule…”, then “✓ Schedule read — N shifts”.</li><li>For the next week, switch the week in Ximble — TaskTime reads it automatically.</li></ol>
+<figure><img src="../assets/shots/ximble-toast-en.png" alt="" style="max-width:460px"></figure>
+<ul><li>Only <b>confirmed</b> shifts are taken; grey (unconfirmed) and “Time off” are skipped.</li><li>Several shifts per day and night shifts are supported.</li><li>Manual changes: Shifts → Schedule → “Change” / “Day off” / “Remove change” → “Save schedule”.</li></ul>
+<figure><img src="../assets/shots/shifts-en.png" alt=""><figcaption>Each shift is compared with the schedule (5-minute tolerance). Scheduled shifts without Clock In are listed at the top.</figcaption></figure></section>
+
+<section id="en-report"><h2><span class="n">09</span>The report</h2>
+<div class="tbl"><table><tr><th>Tab</th><th>Contents</th></tr>
+<tr><td><b>Today</b></td><td>completed tasks, time in tasks, average, time worked; tasks by type; current shift; recent tasks</td></tr>
+<tr><td><b>Statistics</b></td><td>Today / 7 days / This month or a range; per type count, fastest, slowest, average, total; <b>Download CSV</b></td></tr>
+<tr><td><b>Shifts</b></td><td>schedule, each shift with comparison, “Edit”</td></tr>
+<tr><td><b>To review</b></td><td>uncertain tasks with the reason; <b>Confirm</b> or <b>Exclude</b></td></tr>
+<tr><td><b>History</b></td><td>grouped by day; 25/50/100 per page; filters; search</td></tr>
+<tr><td><b>Settings</b></td><td>section 11</td></tr></table></div>
+<figure><img src="../assets/shots/history-en.png" alt=""></figure></section>
+
+<section id="en-edit"><h2><span class="n">10</span>Fixing shifts</h2>
+<ol class="gsteps"><li>Report → <b>Shifts</b> → <b>Edit</b>.</li><li>Change start, end (empty = ongoing, current shift only), planned end.</li><li>Breaks: change, <b>×</b> to delete, <b>+ Break</b> to add.</li><li>Optionally “Overtime confirmed”.</li><li><b>Save</b> — totals are recalculated; the shift is labelled “edited manually”.</li><li>A shift created by mistake → <b>Delete shift</b> (tasks are kept).</li></ol></section>
+
+<section id="en-settings"><h2><span class="n">11</span>Settings</h2>
+<figure><img src="../assets/shots/dash-settings-en.png" alt=""></figure>
+<div class="tbl"><table><tr><th>Section</th><th>What you do</th></tr>
+<tr><td><b>New task alert</b></td><td>sound on/off, volume, test, system notification</td></tr><tr><td><b>Tips</b></td><td>Post QA lines on/off</td></tr><tr><td><b>Leagues and task types</b></td><td>add a league, type or non-task page; unknown types are suggested</td></tr><tr><td><b>Version</b></td><td>installed version, Check now, update steps, Open extensions</td></tr><tr><td><b>Extension folder</b></td><td>save the folder path</td></tr><tr><td><b>Your data</b></td><td>download backup (JSON), restore from backup</td></tr></table></div></section>
+
+<section id="en-update"><h2><span class="n">12</span>Updating</h2>
+<ol class="gsteps"><li>Settings → <b>Check now</b> (also checked automatically a few times a day).</li><li><b>Download</b> the new ZIP.</li><li>Extract it <b>over the same folder</b> → <b>Replace</b>.</li><li>Open <code>chrome://extensions</code> / <code>opera://extensions</code>.</li><li>Press <b>↻ Reload</b> on TaskTime.</li><li><b>Reload</b> Redstone and Ximble (<kbd>F5</kbd>).</li><li>Check Settings → Version. Your records stay.</li></ol>
+<div class="tip">Forgot step 5? The report shows a <b>“Finish updating”</b> bar.</div></section>
+
+<section id="en-backup"><h2><span class="n">13</span>Backup and moving</h2>
+<ol class="gsteps"><li>Settings → Your data → <b>Download backup (JSON)</b>.</li><li>Install TaskTime in the new place (section 2).</li><li>Settings → <b>Restore from backup</b> → choose the file → confirm.</li></ol></section>
+
+<section id="en-trouble"><h2><span class="n">14</span>Troubleshooting</h2><div class="faq">
+<details><summary>Tasks are not recorded</summary><p>Reload Redstone (<kbd>F5</kbd>), especially after an update. Make sure Redstone is in the same browser profile. New task type? Settings → Leagues and task types.</p></details>
+<details><summary>No sound</summary><p>Settings → Test sound; check the switch, volume and that the tab is not muted. The green chime only plays when you are not on the Redstone tab.</p></details>
+<details><summary>No system notification</summary><p>Enable it in Settings and allow it in the browser; check Do Not Disturb / Focus Assist.</p></details>
+<details><summary>The Ximble schedule is not read</summary><p>Reload Ximble, open My Schedule → Week and wait 3 seconds.</p></details>
+<details><summary>The second shift is missing</summary><p>Month view hides it behind “more…” — use Week view.</p></details>
+<details><summary>The icon shows ↑ after updating</summary><p>Press ↻ Reload on TaskTime on the extensions page.</p></details>
+<details><summary>The site shows old information</summary><p>Reload with <kbd>Ctrl</kbd>+<kbd>F5</kbd>.</p></details></div></section>
+
+<section id="en-privacy"><h2><span class="n">15</span>Privacy</h2>
+<ul><li>All records stay <b>in your browser</b>. No server, account or analytics.</li><li>TaskTime <b>only watches</b> — it never clicks or changes anything in Redstone or Ximble.</li><li>The only outbound request is the version check on this site.</li></ul></section>
+</main></div>
+
+<footer><span data-l="bg">TaskTime · не е свързан с Google, Opera, Second Spectrum или Ximble.</span><span data-l="en">TaskTime · not affiliated with Google, Opera, Second Spectrum or Ximble.</span></footer>
+<script>
+(function(){const set=l=>{document.documentElement.lang=l;document.title=l==='bg'?'TaskTime — Ръководство':'TaskTime — User guide';document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.lang===l)));try{localStorage.setItem('tasktime-language',l)}catch{}};
+document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>set(b.dataset.lang)));let l='bg';try{l=localStorage.getItem('tasktime-language')||'bg'}catch{}set(l);
+const links=[...document.querySelectorAll('.toc a')];if('IntersectionObserver' in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}}),{rootMargin:'-30% 0px -60% 0px'});document.querySelectorAll('.g section').forEach(s=>io.observe(s))}})();
+</script></body></html>
